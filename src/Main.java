@@ -241,9 +241,27 @@ public class Main {
         console.getTextWindow().addKeyListener(mainMenuKeyListener);
     }
     public static void main(String[] args) {
+/*
         console = Enigma.getConsole("Graph Generator");
         printMainMenu();
-        registerListeners();
+        registerListeners();*/
+        int[] degrees = {2, 2, 2, 0, 1, 1};
+        Graph graph = new Graph(degrees, 'A');
+
+        graph.randomlyConnectNodes();
+        int[][] relation1 = Graph.buildRelationMatrix(graph);
+        for (int[] row : relation1) {
+            for (int j = 0; j < row.length; j++) {
+                System.out.print(String.valueOf(row[j]) + " ");
+            }
+            System.out.println();
+        }
+        Graph isolatedNodes = graph.getIsolatedNodes();
+        for (int i = 0; i < isolatedNodes.nodeCount(); i++) {
+            System.out.println(isolatedNodes.getNode(i).getName());
+        }
+        System.out.println(Graph.isConnected(graph));
+
 
 
 

@@ -25,7 +25,7 @@ public class Node {
     }
 
     public void connect(Node node) {
-        this.connectedNodes.add(node);
+        this.connectedNodes.addNode(node);
 
     }
 

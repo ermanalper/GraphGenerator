@@ -34,7 +34,7 @@ public class Graph {
         this.nodeCount = degreeSequence.length;
     }
 
-    public void add(Node node) {
+    public void addNode(Node node) {
         this.nodeArr[nodeCount] = node;
         nodeCount++;
     }
@@ -42,15 +42,14 @@ public class Graph {
     public void removeNode(char nodeName) {
         Node[] newArr = new Node[26];
         int placeIx = 0;
-        int getIx = 0;
-        while (getIx < 26) {
-            if (this.nodeArr[getIx].getName() != nodeName) {
-                newArr[placeIx++] = this.nodeArr[getIx];
+        for (int i = 0; i < nodeCount; i++) {
+            if (nodeArr[i].getName() != nodeName) {
+                newArr[placeIx] = nodeArr[i];
+                placeIx++;
             }
-            getIx++;
         }
-        this.nodeArr = newArr;
         nodeCount--;
+        this.nodeArr = newArr;
     }
 
     public void removeNode(Node node) {
@@ -58,7 +57,8 @@ public class Graph {
     }
 
     public void removeNode(int ix) {
-
+        char nodeName = nodeArr[ix].getName();
+        removeNode(nodeName);
     }
 
 
@@ -67,12 +67,13 @@ public class Graph {
     }
 
     public int nodeCount() {
-        return this.nodeArr.length;
+        return nodeCount;
     }
 
     public boolean containsNode(Node node) {
         char nodeName = node.getName();
-        for (Node n : this.nodeArr) {
+        for (int i = 0; i < nodeCount; i++) {
+            Node n = nodeArr[i];
             if (n.getName() == nodeName) {
                 return true;
             }
@@ -88,18 +89,18 @@ public class Graph {
         return false;
     }
 
-    public static void randomlyConnectNodes(Graph graph) {
+    public void randomlyConnectNodes() {
         //Takes nodes (not connected yet, Node.connectedNodes is empty) and connects them randomly (adds each other to Nodes.connectedNodes)
         Random random = new Random();
-        for (int i = 0; i < graph.nodeCount(); i++) {
-            Node currNode = graph.getNode(i);
+        for (int i = 0; i < nodeCount(); i++) {
+            Node currNode = getNode(i);
 
             //find available nodes
             Graph availableNodes = new Graph();
-            for (int j = 0; j < graph.nodeCount(); j++) {
-                Node candidate = graph.getNode(j);
+            for (int j = 0; j < nodeCount(); j++) {
+                Node candidate = getNode(j);
                 if (j != i && candidate.available() && !currNode.isConnectedTo(candidate)) {
-                    availableNodes.add(candidate);
+                    availableNodes.addNode(candidate);
                 }
             }
 
@@ -109,10 +110,10 @@ public class Graph {
                 //if we had connected 2 nodes that must not be connected, reset the whole process and rerun the function
                 if(availableNodes.nodeCount() == 0) {
                     //unconnect all nodes connected so far
-                    for (int n = 0; n < graph.nodeCount(); n++) {
-                        graph.getNode(n).connectedNodes = new Graph();
+                    for (int n = 0; n < nodeCount(); n++) {
+                        getNode(n).connectedNodes = new Graph();
                     }
-                    randomlyConnectNodes(graph);
+                    this.randomlyConnectNodes();
                 } else {
                     int connectToIx = random.nextInt(availableNodes.nodeCount());
                     Node targetNode = availableNodes.getNode(connectToIx);
@@ -127,11 +128,11 @@ public class Graph {
         }
     }
 
-    public static Graph getIsolatedNodes(Graph graph) {
+    public Graph getIsolatedNodes() {
         Graph iso = new Graph();
-        for (int i = 0; i < graph.nodeCount(); i++) {
-            if (graph.getNode(i).getDegree() == 0) {
-                iso.add(graph.getNode(i));
+        for (int i = 0; i < nodeCount(); i++) {
+            if (getNode(i).getDegree() == 0) {
+                iso.addNode(getNode(i));
             }
         }
         return iso;
@@ -260,7 +261,7 @@ public class Graph {
         }
 
         //choose a corrdinate that had not been chosen before
-        for (int n = 0; n < nodeArr.length; n++) {
+        for (int n = 0; n < nodeCount; n++) {
             int coorIx = -1;
             do {
                 coorIx = random.nextInt(70);
