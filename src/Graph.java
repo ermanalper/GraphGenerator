@@ -1,7 +1,10 @@
+import enigma.console.Console;
+
 import java.util.Random;
 
 public class Graph {
     private Node[] nodeArr;
+    private Edge[] edgeArr;
     private int nodeCount;
 
 
@@ -34,9 +37,16 @@ public class Graph {
         this.nodeCount = degreeSequence.length;
     }
 
+
     public void addNode(Node node) {
         this.nodeArr[nodeCount] = node;
         nodeCount++;
+    }
+    public void setEdgeArray(Edge[] edgeArr) {
+        this.edgeArr = edgeArr;
+    }
+    public Edge[] getEdgeArray() {
+        return this.edgeArr;
     }
 
     public void removeNode(char nodeName) {
@@ -89,7 +99,15 @@ public class Graph {
         return false;
     }
 
-    public void randomlyConnectNodes() {
+    public Edge[] randomlyConnectNodes() {
+        //calculate how many edges there should be
+        int degSum = 0;
+        for (int i = 0; i < nodeCount; i++) {
+            degSum += nodeArr[i].getDegree();
+        }
+        int edgeCount = degSum / 2;
+        Edge[] o = new Edge[edgeCount];
+        int edgeIx = 0;
         //Takes nodes (not connected yet, Node.connectedNodes is empty) and connects them randomly (adds each other to Nodes.connectedNodes)
         Random random = new Random();
         for (int i = 0; i < nodeCount(); i++) {
@@ -113,19 +131,21 @@ public class Graph {
                     for (int n = 0; n < nodeCount(); n++) {
                         getNode(n).connectedNodes = new Graph();
                     }
-                    this.randomlyConnectNodes();
+                    return this.randomlyConnectNodes();
                 } else {
                     int connectToIx = random.nextInt(availableNodes.nodeCount());
                     Node targetNode = availableNodes.getNode(connectToIx);
 
                     currNode.connect(targetNode);
                     targetNode.connect(currNode);
+                    o[edgeIx++] = new Edge(currNode, targetNode);
                     availableNodes.removeNode(connectToIx);
                 }
 
             }
 
         }
+        return o;
     }
 
     public Graph getIsolatedNodes() {
@@ -236,9 +256,10 @@ public class Graph {
 
     }
 
-    public static int[][] buildRelationMatrix(Graph graph)    {
+    public int[][] buildRelationMatrix()    {
         //takes nodes, but with non-empty Nodes.connectedNodes, builds a relation matrix using this list
         // YOU MUST USE THIS AFTER CONNECTING THE NODES WITH DegreeOperation.randomlyConnectNodes(nodes);
+        Graph graph = this;
         int n = graph.nodeCount();
         int[][] o = new int[n][n];
         for (int i = 0; i < n; i++) {
@@ -257,7 +278,7 @@ public class Graph {
         int[][] allCoords = new int[70][2];
         //fill all coordinates
         for (int i = 0; i < 70; i++) {
-            allCoords[i] = new int[]{(int)(i / 10), i % 10};
+            allCoords[i] = new int[]{i % 10, (int)i / 10};
         }
 
         //choose a corrdinate that had not been chosen before
@@ -268,7 +289,7 @@ public class Graph {
             } while(allCoords[coorIx][0] == -1);
             int x = allCoords[coorIx][0];
             int y  = allCoords[coorIx][1];
-            nodeArr[n].setCoordinate(new Coordinate(x, y));
+            nodeArr[n].setRelativeCoordinate(new Coordinate(x, y));
 
             //mark that coordinate as chosen by another node
             allCoords[coorIx] = new int[] {-1, -1};
@@ -276,7 +297,15 @@ public class Graph {
         }
 
     }
-
+    public void printNodeNames() {
+        Console console = Main.console;
+        for (int i = 0; i < nodeCount; i++) {
+            Node node = nodeArr[i];
+            Coordinate c = node.getRelativeCoordinate().calculateAbsoluteCoordinate(0,0, Coordinate.MAIN_GRAPH);
+            console.getTextWindow().setCursorPosition(c.getX(), c.getY());
+            console.getTextWindow().output(node.getName());
+        }
+    }
 
 
 

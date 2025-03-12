@@ -1,16 +1,32 @@
-import enigma.console.TextWindow;
+import enigma.console.Console;
 import enigma.core.Enigma;
 
 
+import javax.swing.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Random;
 
+
 public class Main {
     private static int row;
-    public static enigma.console.Console console;
+    public static Console console;
+
     private static KeyListener mainMenuKeyListener;
+    private static KeyListener inputDegreeSequenceMethodKeyListener;
     private static KeyListener escToMainMenuKeyListener;
+    private static KeyListener specifyDegreeIntervalsMethodKeyListener;
+    private static KeyListener graphTestMenuKeyListener;
+
+    private static boolean printKbInput;
+    private static String kbInput;
+    private static String lastVerifiedKbInput;
+    private static int newGraphVertexCount;
+    private static int[] newGraphDegreeSequence;
+    private static int ixPointer;
+    private static Graph[] savedGraphs = new Graph[10]; //savedGraphs[9] is always the main graph
+    private static int minDegree;
+    private static int maxDegree;
 
     private static void clearConsole() {
         for (int i = 0; i < 40; i++) {
@@ -44,12 +60,48 @@ public class Main {
         console.getTextWindow().output("1. Generate graph with degree sequence method");
         console.getTextWindow().setCursorPosition(0, row++);
         console.getTextWindow().output("2. Generate graph with mindegree and maxdegree method");
+        console.getTextWindow().setCursorPosition(0, row++);
+        console.getTextWindow().output("3. Display main graph");
         row ++;
         console.getTextWindow().setCursorPosition(0, row++);
-        console.getTextWindow().output("Please select option 1 or 2");
+        console.getTextWindow().output("Please select option 1, 2 or 3");
 
 
     }
+    private static void graphTestMenuSetup() {
+        //print background
+        for (int i = 0; i < 7; i++) {
+            for (int j = 0; j < 10; j++) {
+                int x = 4 * i;
+                int y = 4 * j;
+                console.getTextWindow().setCursorPosition(y, x);
+                console.getTextWindow().output('.');
+            }
+        }
+        //take the main graph,
+        /// savedGraphs[9] is always the main graph
+        Graph graph = savedGraphs[9];
+
+        //print the relation matrix
+        console.getTextWindow().setCursorPosition(40, 0);
+        for (int i = 0; i < graph.nodeCount(); i++) {
+            console.getTextWindow().output(graph.getNode(i).getName());
+        }
+        row = 1;
+        int[][] relationMatrix = graph.buildRelationMatrix();
+        for (int i = 0; i < graph.nodeCount(); i++) {
+            console.getTextWindow().setCursorPosition(38, row++);
+            console.getTextWindow().output(graph.getNode(i).getName() + " ");
+            int[] row = relationMatrix[i];
+            for (int j = 0; j < row.length; j++) {
+                console.getTextWindow().output(String.valueOf(row[j]));
+            }
+            console.getTextWindow().output(" " + String.valueOf(graph.getNode(i).getDegree()));
+        }
+
+
+    }
+
 
 
     //bunları şimdilik buraya koydum tanzer hoca selamlar
@@ -60,61 +112,20 @@ public class Main {
 
         int[] o = new int[n];
 
-        if (totalDegree % 2 == 0 && totalDegree <= n * (n - 1) && min < max && max < n) { // the given parameters should be valid to create a simple graph
-            //first saturate the min node -> [0]
-            while (o[0] < min) {
-                int targetIx = random.nextInt(n - 1);
-                targetIx = targetIx + 1;
-                if (o[targetIx] < max) {
-                    o[0]++;
-                    o[targetIx]++;
-                }
+        if (totalDegree % 2 == 0 && totalDegree <= n * (n - 1) && min <= max && max < n) { // the given parameters should be valid to create a simple graph
+            for (int i = 0; i < n; i++) {
+                o[i] = min;
             }
-
-            //then saturate the max node -> [1]
-            while (o[1] < max) {
+            o[1] = max;
+            int remainder = (int) totalDegree - ((n - 1) * min) - max;
+            while (remainder > 0) {
                 int targetIx = random.nextInt(n - 2);
                 targetIx += 2;
                 if (o[targetIx] < max) {
-                    o[1]++;
                     o[targetIx]++;
+                    remainder--;
                 }
-            }
 
-            //then connect others nodes until they reach min
-            for (int i = 2; i < n; i++) {
-                while (o[i] < min) {
-                    int targetIx = -1;
-                    do {
-                        targetIx = random.nextInt(n - 2);
-                        targetIx += 2;
-                    } while (targetIx == i);
-                    if (o[targetIx] < max) {
-                        o[i]++;
-                        o[targetIx]++;
-                    }
-                }
-            }
-            //now connect nodes until we reach totalDegree
-            int remainder = (int) totalDegree;
-            for (int d : o){
-                remainder -= d;
-            }
-            while (remainder > 0) {
-                int terminalIx = random.nextInt(n - 2);
-                terminalIx += 2;
-                if (o[terminalIx] < max) {
-                    int targetIx = -1;
-                    do {
-                        targetIx = random.nextInt(n - 2);
-                        targetIx += 2;
-                    } while (targetIx == terminalIx);
-                    if (o[targetIx] < max) {
-                        o[terminalIx]++;
-                        o[targetIx]++;
-                        remainder -= 2;
-                    }
-                }
             }
 
 
@@ -176,13 +187,30 @@ public class Main {
         }
     }
 
-    private static void inputDegreeSequenceMethod() {
+    private static void inputDegreeSequenceMethodSetup() {
+        printKbInput = false;
+        newGraphVertexCount = -1; //unassigned
+        kbInput = "";
         clearConsole();
         row = 0;
         console.getTextWindow().setCursorPosition(0, row++);
-        console.getTextWindow().output("Enter the number of vertices: ");
+        console.getTextWindow().output("How many vertices are there in the graph?: ");
+        ixPointer = 0;
 
 
+
+
+    }
+    private static void specifyDegreeIntervalsMethodSetup() {
+        clearConsole();
+        printKbInput = false;
+        kbInput = "";
+        row = 0;
+        console.getTextWindow().setCursorPosition(0, row++);
+        console.getTextWindow().output("Enter vertex count: ");
+        minDegree = -1; //unassigned
+        maxDegree = -1; //unassigned
+        newGraphVertexCount = -1; //unassigned
     }
 
     public static void registerListeners() {
@@ -198,7 +226,15 @@ public class Main {
                     clearConsole();
                     printMainMenu();
                     //remove all key listeners
+                    console.getTextWindow().removeKeyListener(mainMenuKeyListener);
+                    console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
+                    console.getTextWindow().removeKeyListener(specifyDegreeIntervalsMethodKeyListener);
+                    console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
+
                     console.getTextWindow().addKeyListener(mainMenuKeyListener);
+                    printKbInput = false;
+                    kbInput = "";
+
                 }
             }
 
@@ -219,17 +255,199 @@ public class Main {
                     //create graph with method 1
                     //create graph with method 2
                     case KeyEvent.VK_1: //
+                        console.getTextWindow().removeKeyListener(specifyDegreeIntervalsMethodKeyListener);
                         console.getTextWindow().removeKeyListener(mainMenuKeyListener);
-                        inputDegreeSequenceMethod();
+                        console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
+                        console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
+
+                        console.getTextWindow().addKeyListener(inputDegreeSequenceMethodKeyListener);
+                        inputDegreeSequenceMethodSetup();
                         break;
 
                     case KeyEvent.VK_2:
+                        console.getTextWindow().removeKeyListener(specifyDegreeIntervalsMethodKeyListener);
                         console.getTextWindow().removeKeyListener(mainMenuKeyListener);
-                       // inputMinMaxDegreeMethod();
+                        console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
+                        console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
+
+                        console.getTextWindow().addKeyListener(specifyDegreeIntervalsMethodKeyListener);
+
+                        specifyDegreeIntervalsMethodSetup();
+                        break;
+                    case KeyEvent.VK_3:
+                        console.getTextWindow().removeKeyListener(mainMenuKeyListener);
+                        console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
+                        console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
+                        console.getTextWindow().removeKeyListener(specifyDegreeIntervalsMethodKeyListener);
+
+                        console.getTextWindow().addKeyListener(graphTestMenuKeyListener);
+                        clearConsole();
+                        graphTestMenuSetup();
+                        Graph graph = savedGraphs[9];
+                        for (Edge edge : graph.getEdgeArray()) {
+                            edge.drawEdge();
+                        }
+                        graph.printNodeNames();
                         break;
 
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+
+            }
+        };
+        inputDegreeSequenceMethodKeyListener = new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                String typed = Character.toString(e.getKeyChar());
+                if("0123456789".contains(typed) && printKbInput) {
+                    kbInput += typed;
+                    console.getTextWindow().output(typed);
 
                 }
+                printKbInput = true;
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    if (!kbInput.isEmpty()) {
+                        lastVerifiedKbInput = kbInput;
+                        kbInput = "";
+                        if (newGraphVertexCount == -1) { //if the user had not entered the vertex count
+                            newGraphVertexCount = Integer.parseInt(lastVerifiedKbInput);
+                            console.getTextWindow().setCursorPosition(0, row++);
+                            if (newGraphVertexCount == 0) {
+                                console.getTextWindow().output("Creating new graph is failed! Vertex count cannot be 0. Press Esc for the main menu");
+                                console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
+
+                            } else {
+                                newGraphDegreeSequence = new int[newGraphVertexCount];
+                                console.getTextWindow().output("Enter new node degree (one node at a time): ");
+                            }
+
+                        } else if (ixPointer < newGraphVertexCount) {
+                            //specify next node's degree
+                            int deg = Integer.parseInt(lastVerifiedKbInput);
+                            newGraphDegreeSequence[ixPointer++] = deg;
+                            if (ixPointer < newGraphVertexCount) {
+                                console.getTextWindow().setCursorPosition(0, row++);
+                                console.getTextWindow().output("Enter new node degree (one node at a time): ");
+                            } else {
+                                console.getTextWindow().setCursorPosition(0, row++);
+                                if (isValidSequence(newGraphDegreeSequence)) {
+                                    Graph graph = new Graph(newGraphDegreeSequence, 'A');
+                                    graph.setEdgeArray(graph.randomlyConnectNodes());
+                                    graph.randomlyPlaceNodes();
+                                    savedGraphs[9] = graph; //save new graph as the main graph
+                                    console.getTextWindow().output("New graph is successfully created. Press Esc for the main menu");
+                                } else {
+                                    console.getTextWindow().output("Creating new graph is failed! Invalid degree sequence for a simple graph. Press Esc for the main menu.");
+                                }
+                                console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
+
+                            }
+
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+
+            }
+        };
+        specifyDegreeIntervalsMethodKeyListener = new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                String typed = Character.toString(e.getKeyChar());
+                if("0123456789".contains(typed) && printKbInput) {
+                    kbInput += typed;
+                    console.getTextWindow().output(typed);
+
+                }
+                printKbInput = true;
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER && !kbInput.isEmpty()) {
+                    lastVerifiedKbInput = kbInput;
+                    kbInput = "";
+                    int input = Integer.parseInt(lastVerifiedKbInput);
+                    if (newGraphVertexCount == -1) {
+                        //take node count input
+                        if (input == 0) {
+                            console.getTextWindow().setCursorPosition(0, row++);
+                            console.getTextWindow().output("Vertex count cannot be zero. Please enter something positive: ");
+                        } else {
+                            newGraphVertexCount = input;
+                            console.getTextWindow().setCursorPosition(0, row++);
+                            console.getTextWindow().output("Specify minimum degree: ");
+                        }
+                    } else if (minDegree == -1) {
+                        //take min degree input
+                        minDegree = input;
+                        console.getTextWindow().setCursorPosition(0, row++);
+                        console.getTextWindow().output("Specify maximum degree: ");
+
+                    } else if (maxDegree == -1){
+                        //take max degree input
+                        if (input < minDegree) {
+                            console.getTextWindow().setCursorPosition(0, row++);
+                            console.getTextWindow().output("Max degree cannot be smaller than the min degree. Press Esc for main menu ");
+                            console.getTextWindow().removeKeyListener(specifyDegreeIntervalsMethodKeyListener);
+
+                        } else {
+                            maxDegree = input;
+                            float totalDegree = ((float)(minDegree + maxDegree) / 2) * newGraphVertexCount;
+                            console.getTextWindow().setCursorPosition(0, row++);
+                            if (totalDegree % 2 == 0 && totalDegree <= newGraphVertexCount * (newGraphVertexCount - 1) && minDegree <= maxDegree && maxDegree < newGraphVertexCount) {
+                               // console.getTextWindow().output("birinci çalışır");
+                                int[] degreeSequence = randomlyCreateDegreeSequence(minDegree, maxDegree, newGraphVertexCount);
+                              //  console.getTextWindow().output("ikinci çalışır");
+                                Graph graph = new Graph(degreeSequence, 'A');
+                                graph.setEdgeArray(graph.randomlyConnectNodes());
+                                graph.randomlyPlaceNodes();
+                                savedGraphs[9] = graph;
+                                console.getTextWindow().output("Graph created successfully. Press Esc for main menu");
+                            } else {
+                                console.getTextWindow().output("Invalid values. Press Esc for main menu");
+                            }
+                            console.getTextWindow().removeKeyListener(specifyDegreeIntervalsMethodKeyListener);
+
+
+                        }
+                    }
+                }
+
+
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+
+            }
+        };
+        graphTestMenuKeyListener = new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+
+
             }
 
             @Override
@@ -241,10 +459,7 @@ public class Main {
         console.getTextWindow().addKeyListener(mainMenuKeyListener);
     }
     public static void main(String[] args) {
-/*
-        console = Enigma.getConsole("Graph Generator");
-        printMainMenu();
-        registerListeners();*/
+        /*
         int[] degrees = {2, 2, 2, 0, 1, 1};
         Graph graph = new Graph(degrees, 'A');
 
@@ -260,7 +475,19 @@ public class Main {
         for (int i = 0; i < isolatedNodes.nodeCount(); i++) {
             System.out.println(isolatedNodes.getNode(i).getName());
         }
-        System.out.println(Graph.isConnected(graph));
+        System.out.println(Graph.isConnected(graph));*/
+        console = Enigma.getConsole("Graph Generator");
+        printMainMenu();
+        registerListeners();
+
+
+
+
+
+
+
+
+
 
 
 

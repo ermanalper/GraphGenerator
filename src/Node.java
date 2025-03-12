@@ -39,10 +39,11 @@ public class Node {
         return this.connectedNodes.nodeCount() < degree;
     }
 
-    public void setCoordinate(Coordinate coordinate) {
+    public void setRelativeCoordinate(Coordinate coordinate) {
         this.coordinate = coordinate;
     }
-    public int[] getCoordinate() {
-        return new int[] {this.coordinate.getX(), this.coordinate.getY()};
+    public Coordinate getRelativeCoordinate() {
+        return this.coordinate;
     }
+
 }
