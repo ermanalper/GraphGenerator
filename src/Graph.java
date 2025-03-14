@@ -3,6 +3,12 @@ import enigma.console.Console;
 import java.util.Random;
 
 public class Graph {
+    private static final int DRAWING_MODE_0 = 0;
+    private static final int DRAWING_MODE_1 = 1;
+    private static final int DRAWING_MODE_2 = 2;
+
+
+
     private Node[] nodeArr;
     private Edge[] edgeArr;
     private int nodeCount;
@@ -305,6 +311,15 @@ public class Graph {
             console.getTextWindow().setCursorPosition(c.getX(), c.getY());
             console.getTextWindow().output(node.getName());
         }
+    }
+
+    public void drawALlEdges(int drawingMode) {
+
+        int[][] inkedPoints = new int[25][37];
+        for (Edge e : this.edgeArr) {
+            e.drawEdge(inkedPoints, drawingMode);
+        }
+
     }
 
 

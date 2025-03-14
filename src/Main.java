@@ -11,12 +11,14 @@ import java.util.Random;
 public class Main {
     private static int row;
     public static Console console;
+    private static int drawingMode = 0;
 
     private static KeyListener mainMenuKeyListener;
     private static KeyListener inputDegreeSequenceMethodKeyListener;
     private static KeyListener escToMainMenuKeyListener;
     private static KeyListener specifyDegreeIntervalsMethodKeyListener;
     private static KeyListener graphTestMenuKeyListener;
+    private static KeyListener chooseDrawingMethodKeyListener;
 
     private static boolean printKbInput;
     private static String kbInput;
@@ -62,6 +64,8 @@ public class Main {
         console.getTextWindow().output("2. Generate graph with mindegree and maxdegree method");
         console.getTextWindow().setCursorPosition(0, row++);
         console.getTextWindow().output("3. Display main graph");
+        console.getTextWindow().setCursorPosition(0, row++);
+        console.getTextWindow().output("4. Change drawing method (default: 0)");
         row ++;
         console.getTextWindow().setCursorPosition(0, row++);
         console.getTextWindow().output("Please select option 1, 2 or 3");
@@ -101,10 +105,21 @@ public class Main {
 
 
     }
+    private static void setupDrawMethodChoose() {
+        clearConsole();
+        row = 0;
+        console.getTextWindow().setCursorPosition(0, row++);
+        console.getTextWindow().output("Choose a drawing method: ");
+        console.getTextWindow().setCursorPosition(0, row++);
+        console.getTextWindow().output("0. {1, 2, 3, 4, ...");
+        console.getTextWindow().setCursorPosition(0, row++);
+        console.getTextWindow().output("1. {+, o, #, @");
+        console.getTextWindow().setCursorPosition(0, row++);
+        console.getTextWindow().output("2. {+}");
+    }
 
 
 
-    //bunları şimdilik buraya koydum tanzer hoca selamlar
     public static int[] randomlyCreateDegreeSequence(int min, int max, int n) {
         //returns a degree sequence with mean = Mean(min, max)
         Random random = new Random();
@@ -230,6 +245,8 @@ public class Main {
                     console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
                     console.getTextWindow().removeKeyListener(specifyDegreeIntervalsMethodKeyListener);
                     console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
+                    console.getTextWindow().removeKeyListener(chooseDrawingMethodKeyListener);
+
 
                     console.getTextWindow().addKeyListener(mainMenuKeyListener);
                     printKbInput = false;
@@ -259,6 +276,8 @@ public class Main {
                         console.getTextWindow().removeKeyListener(mainMenuKeyListener);
                         console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
                         console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
+                        console.getTextWindow().removeKeyListener(chooseDrawingMethodKeyListener);
+
 
                         console.getTextWindow().addKeyListener(inputDegreeSequenceMethodKeyListener);
                         inputDegreeSequenceMethodSetup();
@@ -269,6 +288,8 @@ public class Main {
                         console.getTextWindow().removeKeyListener(mainMenuKeyListener);
                         console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
                         console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
+                        console.getTextWindow().removeKeyListener(chooseDrawingMethodKeyListener);
+
 
                         console.getTextWindow().addKeyListener(specifyDegreeIntervalsMethodKeyListener);
 
@@ -279,16 +300,32 @@ public class Main {
                         console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
                         console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
                         console.getTextWindow().removeKeyListener(specifyDegreeIntervalsMethodKeyListener);
+                        console.getTextWindow().removeKeyListener(chooseDrawingMethodKeyListener);
+
 
                         console.getTextWindow().addKeyListener(graphTestMenuKeyListener);
                         clearConsole();
                         graphTestMenuSetup();
                         Graph graph = savedGraphs[9];
+                        int[][] inkedPoints = new int[25][37];
                         for (Edge edge : graph.getEdgeArray()) {
-                            edge.drawEdge();
+                            edge.drawEdge(inkedPoints, drawingMode);
                         }
                         graph.printNodeNames();
                         break;
+                    case KeyEvent.VK_4:
+                        setupDrawMethodChoose();
+                        console.getTextWindow().removeKeyListener(mainMenuKeyListener);
+                        console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
+                        console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
+                        console.getTextWindow().removeKeyListener(specifyDegreeIntervalsMethodKeyListener);
+                        console.getTextWindow().removeKeyListener(chooseDrawingMethodKeyListener);
+
+
+                        console.getTextWindow().addKeyListener(chooseDrawingMethodKeyListener);
+
+
+
 
                 }
             }
@@ -455,6 +492,42 @@ public class Main {
 
             }
         };
+        chooseDrawingMethodKeyListener = new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                console.getTextWindow().setCursorPosition(0, row++);
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_0:
+                        drawingMode = 0;
+                        console.getTextWindow().output("Drawing method is set successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_1:
+                        drawingMode = 1;
+                        console.getTextWindow().output("Drawing method is set successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_2:
+                        drawingMode = 2;
+                        console.getTextWindow().output("Drawing method is set successfully. Press Esc for the main menu");
+                        break;
+                    default:
+                        console.getTextWindow().output("Invalid input. Please choose 0, 1, or 2");
+                        break;
+                }
+
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+
+            }
+        };
+
         console.getTextWindow().addKeyListener(escToMainMenuKeyListener);
         console.getTextWindow().addKeyListener(mainMenuKeyListener);
     }

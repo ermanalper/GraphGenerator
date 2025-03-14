@@ -10,7 +10,15 @@ public class Edge {
         this.node2 = node2;
     }
 
-    public void drawEdge() {
+    public void drawEdge(int[][] inkedPoints, int drawingMode) {
+        String[] palette = {};
+        if (drawingMode == 1) {
+            palette = new String[]{"+", "o", "#", "@"};
+        } else if (drawingMode == 2) {
+            palette = new String[]{"+", "+", "+", "+"};
+        }
+
+
         Console console = Main.console;
         Random random = new Random();
         int bound = random.nextInt(2);
@@ -44,8 +52,21 @@ public class Edge {
             } else if (printY < endingPoint.getY()) { //cursor is above
                 printY++;
             }
+            /// now we are pointing printY, printX on the inkedPoints matrix
+            String ink;
+            int prevInkCount = inkedPoints[printY][printX]++;
+            if (drawingMode == 0) {
+                int inkInt = Math.min(prevInkCount + 1, 9);
+                ink = String.valueOf(inkInt);
+            } else {
+                int inkIntIx = Math.min(prevInkCount, 3);
+                ink = palette[inkIntIx];
+            }
+
+
+
             console.getTextWindow().setCursorPosition(printX, printY);
-            console.getTextWindow().output('*');
+            console.getTextWindow().output(ink);
         }
 
     }
