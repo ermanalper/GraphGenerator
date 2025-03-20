@@ -77,6 +77,62 @@ public class Main {
 
 
     }
+
+    private static void printRelationMatrixStartingFromSpecifiedCursorPosition(int x, int y, int[][] relationMatrix, int relationNumber) {
+        console.getTextWindow().setCursorPosition(x, y++);
+        console.getTextWindow().output("R^" + relationNumber);
+        int n = relationMatrix.length;
+        for (int i = 0; i < n; i++) {
+            console.getTextWindow().setCursorPosition(x, y++);
+            for (int j = 0; j < n; j++) {
+                console.getTextWindow().output(String.valueOf(relationMatrix[i][j]));
+            }
+        }
+
+    }
+    private static void printRelationMatrices(int[][][] relationMatrices, int[][] minMatrix) {
+        int n = relationMatrices.length;
+        int x;
+        int y;
+        int r;
+        //print relation matrices
+        for (r = 1; r < n; r++) {
+            //find the starting point
+            x = 65 + ((r - 1) % 3) * (n + 2);
+            y = (((r - 1) / 3) * (n + 2));
+            printRelationMatrixStartingFromSpecifiedCursorPosition(x, y, relationMatrices[r], r + 1);
+        }
+
+        x = 65 + ((r - 1) % 3) * (n + 2);
+        y = (((r - 1) / 3) * (n + 2));
+        //print transitive closure
+        console.getTextWindow().setCursorPosition(x, y++);
+        console.getTextWindow().output("R*");
+        for (int i = 0; i < n; i++) {
+            console.getTextWindow().setCursorPosition(x, y++);
+            for (int j = 0; j < n; j++) {
+                console.getTextWindow().output(String.valueOf(relationMatrices[n - 1][i][j])); ///for an n-node-graph, R* = R^n, so we display R^n without doing any further calculation
+            }
+        }
+        r++;
+        x = 65 + ((r - 1) % 3) * (n + 2);
+        y = (((r - 1) / 3) * (n + 2));
+        //print Rmin
+        console.getTextWindow().setCursorPosition(x, y++);
+        console.getTextWindow().output("Rmin");
+        for (int i = 0; i < n; i++) {
+            console.getTextWindow().setCursorPosition(x, y++);
+            for (int j = 0; j < n; j++) {
+                console.getTextWindow().output(String.valueOf(minMatrix[i][j])); ///for an n-node-graph, R* = R^n, so we display R^n without doing any further calculation
+            }
+        }
+
+
+
+
+
+
+    }
     private static void graphTestMenuSetup() {
         //print background
         for (int i = 0; i < 7; i++) {
@@ -132,6 +188,34 @@ public class Main {
         console.getTextWindow().output("9. Star Graph (Sn)?");
         console.getTextWindow().setCursorPosition(38, row++);
         console.getTextWindow().output("10. Isomorphic?");
+
+        int n = graph.nodeCount();
+        int[][] minMatrix = new int[n][n];
+        int[][][] relationMatrices = new int[n][n][n];
+
+        //R1 matrix
+        relationMatrices[0] = graph.buildRelationMatrix();
+        //Mark 1-step-away nodes as 1 in the min matrix
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (relationMatrices[0][i][j] == 1) {
+                    minMatrix[i][j] = 1;
+                }
+            }
+        }
+        //find all other relation matrices using R1
+        for (int r = 1; r < n; r++) {
+            relationMatrices[r] = Graph.multiplyRelationMatrix(relationMatrices[r - 1], relationMatrices[0]);
+            //if a node is newly reached, write down the steps needed to the min matrix
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    if (minMatrix[i][j] == 0 && relationMatrices[r][i][j] == 1) {
+                        minMatrix[i][j] = r + 1;
+                    }
+                }
+            }
+        }
+        printRelationMatrices(relationMatrices, minMatrix);
 
 
 
