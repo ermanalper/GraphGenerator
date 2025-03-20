@@ -1,7 +1,13 @@
+
+
 public class Node {
     private final char name;
     private final int degree;
     private Coordinate coordinate;
+
+
+
+
 
     //connectedNodes : if any node has an edge with this node, it will appear in connectedNodes
     public Graph connectedNodes;
@@ -18,7 +24,7 @@ public class Node {
         this.connectedNodes = new Graph();
     }
     public char getName() {
-        return name;
+        return this.name;
     }
     public int getDegree() {
         return degree;

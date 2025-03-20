@@ -31,9 +31,9 @@ public class Main {
     private static int maxDegree;
 
     private static void clearConsole() {
-        for (int i = 0; i < 40; i++) {
+        for (int i = 0; i < 50; i++) {
             console.getTextWindow().setCursorPosition(0, i);
-            console.getTextWindow().output("                                                                                                         ");
+            console.getTextWindow().output("                                                                                                                                                                       ");
         }
         row = 0;
     }
@@ -102,6 +102,33 @@ public class Main {
             }
             console.getTextWindow().output(" " + String.valueOf(graph.getNode(i).getDegree()));
         }
+        row += 2;
+        console.getTextWindow().setCursorPosition(38, row++);
+        console.getTextWindow().output("Graph Test Menu: ");
+        console.getTextWindow().setCursorPosition(38, row++);
+        console.getTextWindow().output("----------------------");
+        console.getTextWindow().setCursorPosition(38, row++);
+        console.getTextWindow().output("1. Connected?");
+        console.getTextWindow().setCursorPosition(38, row++);
+        console.getTextWindow().output("2. Contains C3?");
+        console.getTextWindow().setCursorPosition(38, row++);
+        console.getTextWindow().output("3. Isolated Vertices?");
+        console.getTextWindow().setCursorPosition(38, row++);
+        console.getTextWindow().output("4. Complete Graph?");
+        console.getTextWindow().setCursorPosition(38, row++);
+        console.getTextWindow().output("5. Bipartite?");
+        console.getTextWindow().setCursorPosition(38, row++);
+        console.getTextWindow().output("6. Complete Bipartite?");
+        console.getTextWindow().setCursorPosition(38, row++);
+        console.getTextWindow().output("7. Cycle Graph (Cn)?");
+        console.getTextWindow().setCursorPosition(38, row++);
+        console.getTextWindow().output("8. Wheel Graph (Wn)?");
+        console.getTextWindow().setCursorPosition(38, row++);
+        console.getTextWindow().output("9. Star Graph (Sn)?");
+        console.getTextWindow().setCursorPosition(38, row++);
+        console.getTextWindow().output("10. Isomorphic?");
+
+
 
 
     }
@@ -211,9 +238,6 @@ public class Main {
         console.getTextWindow().setCursorPosition(0, row++);
         console.getTextWindow().output("How many vertices are there in the graph?: ");
         ixPointer = 0;
-
-
-
 
     }
     private static void specifyDegreeIntervalsMethodSetup() {
@@ -482,8 +506,41 @@ public class Main {
 
             @Override
             public void keyPressed(KeyEvent e) {
+                if (row < 25) {
+                    row = 25;
+                }
+                Graph graph = savedGraphs[9];//main graph is at index 9
+                console.getTextWindow().setCursorPosition(0, row++);
+                switch(e.getKeyCode()) {
+                    case KeyEvent.VK_1: /// connected
+                        console.getTextWindow().output(String.valueOf(graph.isConnected()));
+                        break;
+                    case KeyEvent.VK_2: /// contains c3
+                        String o = graph.getAllC3s();
+                        if (o.isEmpty()) {
+                            console.getTextWindow().output("No");
+                        } else {
+                            console.getTextWindow().output("Yes. Vertices: " + o);
+                        }
+                        break;
+                    case KeyEvent.VK_3: /// isolated vertices
+                        Graph isoVertices = graph.getIsolatedNodes();
+                        if (isoVertices.nodeCount() == 0) {
+                            console.getTextWindow().output("-");
+                        } else {
+                            for (int i = 0; i < isoVertices.nodeCount(); i++) {
+                                console.getTextWindow().output(isoVertices.getNode(i).getName() + " ");
+                            }
+                        }
+                        break;
+                    case KeyEvent.VK_4: /// complete graph
+                        console.getTextWindow().output(String.valueOf(graph.isCompleteGraph()));
+                        break;
 
 
+
+
+                }
 
             }
 
@@ -548,7 +605,9 @@ public class Main {
         for (int i = 0; i < isolatedNodes.nodeCount(); i++) {
             System.out.println(isolatedNodes.getNode(i).getName());
         }
-        System.out.println(Graph.isConnected(graph));*/
+        System.out.println(Graph.isConnected(graph));
+        */
+
         console = Enigma.getConsole("Graph Generator");
         printMainMenu();
         registerListeners();

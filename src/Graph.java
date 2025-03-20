@@ -1,3 +1,4 @@
+import com.sun.java.swing.plaf.windows.WindowsInternalFrameTitlePane;
 import enigma.console.Console;
 
 import java.util.Random;
@@ -164,17 +165,13 @@ public class Graph {
         return iso;
     }
 
-    public static boolean isCompleteGraph(int[][] transitiveClosureMatrix) {
-        int row = transitiveClosureMatrix.length;
-        int col = transitiveClosureMatrix[0].length;
-        for (int i = 0; i < row; i++) {
-            for (int j = 0; j < col; j++) {
-                if (i != j && transitiveClosureMatrix[i][j] == 0) {
-                    return false;
-                }
-            }
+    public boolean isCompleteGraph() {
+        int degSum = 0;
+        for (int n = 0; n < this.nodeCount(); n++) {
+            Node node = this.nodeArr[n];
+            degSum += node.getDegree();
         }
-        return true;
+        return (this.nodeCount() * (this.nodeCount() - 1)) == degSum;
     }
 
     public static int[][] multiplyRelationMatrix(int[][] relationMatrixN, int[][] relationMatrix) {
@@ -251,9 +248,9 @@ public class Graph {
         }
     }
 
-    public static boolean isConnected(Graph nodes) {
-        Graph clonedArray = new Graph(nodes);
-        Node startingNode = nodes.getNode(0);
+    public boolean isConnected() {
+        Graph clonedArray = new Graph(this);
+        Node startingNode = clonedArray.getNode(0);
 
         visit(startingNode, clonedArray);
 
@@ -287,7 +284,7 @@ public class Graph {
             allCoords[i] = new int[]{i % 10, (int)i / 10};
         }
 
-        //choose a corrdinate that had not been chosen before
+        //choose a coordinate that had not been chosen before
         for (int n = 0; n < nodeCount; n++) {
             int coorIx = -1;
             do {
@@ -313,18 +310,48 @@ public class Graph {
         }
     }
 
-    public void drawALlEdges(int drawingMode) {
 
-        int[][] inkedPoints = new int[25][37];
-        for (Edge e : this.edgeArr) {
-            e.drawEdge(inkedPoints, drawingMode);
+    public String getAllC3s() {
+        int edgeCount = this.edgeArr.length;
+        String c3Piles = "";
+
+        //this n^3 iteration will reach all edge combinations of 3
+        for (int i = 0; i < edgeCount - 2; i++) {
+            for (int j = i + 1; j < edgeCount - 1; j++) {
+                for (int k = j + 1; k < edgeCount; k++) {
+                    String visitedNodeNames = "";
+                    Edge e1 = edgeArr[i];
+                    Edge e2 = edgeArr[j];
+                    Edge e3 = edgeArr[k];
+                    Node[] e1Nodes = e1.getNodes();
+                    Node[] e2Nodes = e2.getNodes();
+                    Node[] e3Nodes = e3.getNodes();
+                    visitedNodeNames += String.valueOf(e1Nodes[0].getName()) + e1Nodes[1].getName();
+                    if (!visitedNodeNames.contains(String.valueOf(e2Nodes[0].getName()))) {
+                        visitedNodeNames += String.valueOf(e2Nodes[0].getName());
+                    }
+                    if (!visitedNodeNames.contains(String.valueOf(e2Nodes[1].getName()))) {
+                        visitedNodeNames += String.valueOf(e2Nodes[1].getName());
+                    }
+                    if (!visitedNodeNames.contains(String.valueOf(e3Nodes[0].getName()))) {
+                        visitedNodeNames += String.valueOf(e3Nodes[0].getName());
+                    }
+                    if (!visitedNodeNames.contains(String.valueOf(e3Nodes[1].getName()))) {
+                        visitedNodeNames += String.valueOf(e3Nodes[1].getName());
+                    }
+                    if (visitedNodeNames.length() == 3) {
+                        c3Piles += String.join(", ", visitedNodeNames) + " - ";
+                    }
+
+                }
+            }
         }
-
+        if (c3Piles.length() > 3) {
+            c3Piles = c3Piles.substring(0, c3Piles.length() - 3);
+        }
+        /// if c3Piles.length() == 0  -> no C3
+        return c3Piles;
     }
-
-
-
-
 
 
 

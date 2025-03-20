@@ -70,5 +70,8 @@ public class Edge {
         }
 
     }
+    public Node[] getNodes() {
+        return new Node[] {this.node1, this.node2};
+    }
 
 }
