@@ -19,6 +19,8 @@ public class Main {
     private static KeyListener specifyDegreeIntervalsMethodKeyListener;
     private static KeyListener graphTestMenuKeyListener;
     private static KeyListener chooseDrawingMethodKeyListener;
+    private static KeyListener graphTransferMenuKeyListener;
+
 
     private static boolean printKbInput;
     private static String kbInput;
@@ -66,9 +68,12 @@ public class Main {
         console.getTextWindow().output("3. Display main graph");
         console.getTextWindow().setCursorPosition(0, row++);
         console.getTextWindow().output("4. Change drawing method (default: 0)");
+        console.getTextWindow().setCursorPosition(0, row++);
+        console.getTextWindow().output("5. Graph Transfer Menu");
+
         row ++;
         console.getTextWindow().setCursorPosition(0, row++);
-        console.getTextWindow().output("Please select option 1, 2 or 3");
+        console.getTextWindow().output("Please select option 1, 2, 3, 4 or 5");
 
 
     }
@@ -143,6 +148,23 @@ public class Main {
         console.getTextWindow().output("1. {+, o, #, @");
         console.getTextWindow().setCursorPosition(0, row++);
         console.getTextWindow().output("2. {+}");
+    }
+    private static void setupGraphTransferMenu() {
+        clearConsole();
+        row = 0;
+
+        console.getTextWindow().setCursorPosition(0, row++);
+        console.getTextWindow().output("1. Copy main graph to secondary graph  (Key: G)");
+        console.getTextWindow().setCursorPosition(0, row++);
+        console.getTextWindow().output("2. Copy secondary graph to main graph  (Key: H)");
+        console.getTextWindow().setCursorPosition(0, row++);
+        console.getTextWindow().output("3. Load a graph file (\"graph1.txt\") to main graph (Key: L)");
+        console.getTextWindow().setCursorPosition(0, row++);
+        console.getTextWindow().output("4. Save main graph to a file (\"graph1.txt\")          (Key: S)");
+        console.getTextWindow().setCursorPosition(0, row++);
+        console.getTextWindow().output("5. Copy main graph to a depot graph (1-9) (Keys: QWE RTY UIO)");
+        console.getTextWindow().setCursorPosition(0, row++);
+        console.getTextWindow().output("6. Copy a depot graph to main graph         (Keys: 123  456  789)");
     }
 
 
@@ -270,6 +292,7 @@ public class Main {
                     console.getTextWindow().removeKeyListener(specifyDegreeIntervalsMethodKeyListener);
                     console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
                     console.getTextWindow().removeKeyListener(chooseDrawingMethodKeyListener);
+                    console.getTextWindow().removeKeyListener(graphTransferMenuKeyListener);
 
 
                     console.getTextWindow().addKeyListener(mainMenuKeyListener);
@@ -301,6 +324,7 @@ public class Main {
                         console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
                         console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
                         console.getTextWindow().removeKeyListener(chooseDrawingMethodKeyListener);
+                        console.getTextWindow().removeKeyListener(graphTransferMenuKeyListener);
 
 
                         console.getTextWindow().addKeyListener(inputDegreeSequenceMethodKeyListener);
@@ -313,6 +337,7 @@ public class Main {
                         console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
                         console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
                         console.getTextWindow().removeKeyListener(chooseDrawingMethodKeyListener);
+                        console.getTextWindow().removeKeyListener(graphTransferMenuKeyListener);
 
 
                         console.getTextWindow().addKeyListener(specifyDegreeIntervalsMethodKeyListener);
@@ -325,6 +350,7 @@ public class Main {
                         console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
                         console.getTextWindow().removeKeyListener(specifyDegreeIntervalsMethodKeyListener);
                         console.getTextWindow().removeKeyListener(chooseDrawingMethodKeyListener);
+                        console.getTextWindow().removeKeyListener(graphTransferMenuKeyListener);
 
 
                         console.getTextWindow().addKeyListener(graphTestMenuKeyListener);
@@ -344,9 +370,25 @@ public class Main {
                         console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
                         console.getTextWindow().removeKeyListener(specifyDegreeIntervalsMethodKeyListener);
                         console.getTextWindow().removeKeyListener(chooseDrawingMethodKeyListener);
+                        console.getTextWindow().removeKeyListener(graphTransferMenuKeyListener);
 
 
                         console.getTextWindow().addKeyListener(chooseDrawingMethodKeyListener);
+                        break;
+                    case KeyEvent.VK_5:
+                        setupGraphTransferMenu();
+
+                        console.getTextWindow().removeKeyListener(mainMenuKeyListener);
+                        console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
+                        console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
+                        console.getTextWindow().removeKeyListener(specifyDegreeIntervalsMethodKeyListener);
+                        console.getTextWindow().removeKeyListener(chooseDrawingMethodKeyListener);
+                        console.getTextWindow().removeKeyListener(chooseDrawingMethodKeyListener);
+
+
+                        console.getTextWindow().addKeyListener(graphTransferMenuKeyListener);
+                        break;
+
 
 
 
@@ -584,6 +626,87 @@ public class Main {
 
             }
         };
+        graphTransferMenuKeyListener= new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                clearConsole();
+                console.getTextWindow().setCursorPosition(0, 0);
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_G:
+                    savedGraphs[8]=savedGraphs[9];
+                    console.getTextWindow().output("Main graph copied second graph successfully. Press Esc for the main menu");
+                    break;
+                    case KeyEvent.VK_H:
+                        savedGraphs[9]=savedGraphs[8];
+                        console.getTextWindow().output("Second graph copied Main graph successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_L:
+                     //nası yapacağımızı tam bilmiyorum
+                        break;
+                    case KeyEvent.VK_S:
+                        //burayı da bilmiyorum
+                        break;
+                        /*
+              savedgraph[9]=main
+                        8=1
+                        7=2
+                        6=3....
+                         */
+                    case KeyEvent.VK_Q:
+                            savedGraphs[8]=savedGraphs[9];
+                            console.getTextWindow().output("Main graph copied 1. depot graph successfully. Press Esc for the main menu");
+                            break;
+                    case KeyEvent.VK_W:
+                                savedGraphs[7]=savedGraphs[9];
+                                console.getTextWindow().output("Main graph copied 2. depot graph successfully. Press Esc for the main menu");
+                                break;
+                    case KeyEvent.VK_E:
+                                    savedGraphs[6]=savedGraphs[9];
+                                    console.getTextWindow().output("Main graph copied 3. depot graph successfully. Press Esc for the main menu");
+                                    break;
+                    case KeyEvent.VK_R:
+                        savedGraphs[5]=savedGraphs[9];
+                        console.getTextWindow().output("Main graph copied 4. depot graph successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_T:
+                        savedGraphs[4]=savedGraphs[9];
+                        console.getTextWindow().output("Main graph copied 5. depot graph successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_Y:
+                        savedGraphs[3]=savedGraphs[9];
+                        console.getTextWindow().output("Main graph copied 6. depot graph successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_U:
+                        savedGraphs[2]=savedGraphs[9];
+                        console.getTextWindow().output("Main graph copied 7. depot graph successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_I:
+                        savedGraphs[1]=savedGraphs[9];
+                        console.getTextWindow().output("Main graph copied 8. depot graph successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_O:
+                        savedGraphs[0]=savedGraphs[9];
+                        console.getTextWindow().output("Main graph copied 9. depot graph successfully. Press Esc for the main menu");
+                        break;
+
+                    default:
+                        console.getTextWindow().output("Invalid input. Please enter G H L S QWE RTY UIO.");
+                        break;
+                }
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+
+            }
+        };
+
 
         console.getTextWindow().addKeyListener(escToMainMenuKeyListener);
         console.getTextWindow().addKeyListener(mainMenuKeyListener);
