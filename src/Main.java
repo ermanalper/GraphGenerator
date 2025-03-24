@@ -777,9 +777,45 @@ public class Main {
                         savedGraphs[0]=savedGraphs[9];
                         console.getTextWindow().output("Main graph copied 9. depot graph successfully. Press Esc for the main menu");
                         break;
+                    case KeyEvent.VK_1:
+                        savedGraphs[9]=savedGraphs[8];
+                        console.getTextWindow().output("1. Depot graph copied main graph successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_2:
+                        savedGraphs[9]=savedGraphs[7];
+                        console.getTextWindow().output("2. Depot graph copied main graph successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_3:
+                        savedGraphs[9]=savedGraphs[6];
+                        console.getTextWindow().output("3. Depot graph copied main graph successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_4:
+                        savedGraphs[9]=savedGraphs[5];
+                        console.getTextWindow().output("4. Depot graph copied main graph successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_5:
+                        savedGraphs[9]=savedGraphs[4];
+                        console.getTextWindow().output("5. Depot graph copied main graph successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_6:
+                        savedGraphs[9]=savedGraphs[3];
+                        console.getTextWindow().output("6. Depot graph copied main graph successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_7:
+                        savedGraphs[9]=savedGraphs[2];
+                        console.getTextWindow().output("7. Depot graph copied main graph successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_8:
+                        savedGraphs[9]=savedGraphs[1];
+                        console.getTextWindow().output("8. Depot graph copied main graph successfully. Press Esc for the main menu");
+                        break;
+                    case KeyEvent.VK_9:
+                        savedGraphs[9]=savedGraphs[0];
+                        console.getTextWindow().output("9. Depot graph copied main graph successfully. Press Esc for the main menu");
+                        break;
 
                     default:
-                        console.getTextWindow().output("Invalid input. Please enter G H L S QWE RTY UIO.");
+                        console.getTextWindow().output("Invalid input. Please enter G H L S QWE RTY UIO 123 456 789.");
                         break;
                 }
 
