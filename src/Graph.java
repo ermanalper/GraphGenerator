@@ -4,9 +4,12 @@ import enigma.console.Console;
 import java.util.Random;
 
 public class Graph {
-    private static final int DRAWING_MODE_0 = 0;
-    private static final int DRAWING_MODE_1 = 1;
-    private static final int DRAWING_MODE_2 = 2;
+    public static final int DRAWING_MODE_0 = 0;
+    public static final int DRAWING_MODE_1 = 1;
+    public static final int DRAWING_MODE_2 = 2;
+
+
+
 
 
 
@@ -21,14 +24,17 @@ public class Graph {
         this.nodeArr = new Node[26];
         nodeCount = 0;
     }
+
     public Graph(Graph nodeArr) {
         //clones nodeArr and initializes a new one
         Node[] newArray = new Node[26];
-        for (int i = 0; i < nodeArr.nodeCount(); i++) {
-            newArray[i] = nodeArr.getNode(i);
+        for (int i = 0; i < 26; i++) {
+            if (nodeArr.getNode(i) == null) continue;
+            char nodeName = nodeArr.getNode(i).getName();
+            newArray[nodeName - 'A'] = nodeArr.getNode(i);
         }
         this.nodeArr = newArray;
-        nodeCount = nodeArr.nodeCount;
+        this.nodeCount = nodeArr.nodeCount();
     }
     public Graph(int[] degreeSequence, char firstNodeName) {
         //creates a new non-empty NodeArray with Nodes that satisfy the degree sequence.
@@ -38,7 +44,8 @@ public class Graph {
 
         Node[] nodeArr = new Node[26];
         for (int i = 0; i < degreeSequence.length; i++) {
-            nodeArr[i] = new Node((char) (firstNodeName + i), degreeSequence[i]);
+            char nodeName = (char)(firstNodeName + i);
+            nodeArr[nodeName - 'A'] = new Node(nodeName, degreeSequence[i]);
         }
         this.nodeArr = nodeArr;
         this.nodeCount = degreeSequence.length;
@@ -47,16 +54,8 @@ public class Graph {
 
 
 
-
-
-
-
-
-
-
-
     public void addNode(Node node) {
-        this.nodeArr[nodeCount] = node;
+        this.nodeArr[node.getName() - 'A'] = node;
         nodeCount++;
     }
     public void setEdgeArray(Edge[] edgeArr) {
@@ -67,16 +66,8 @@ public class Graph {
     }
 
     public void removeNode(char nodeName) {
-        Node[] newArr = new Node[26];
-        int placeIx = 0;
-        for (int i = 0; i < nodeCount; i++) {
-            if (nodeArr[i].getName() != nodeName) {
-                newArr[placeIx] = nodeArr[i];
-                placeIx++;
-            }
-        }
+        this.nodeArr[nodeName - 'A'] = null;
         nodeCount--;
-        this.nodeArr = newArr;
     }
 
     public void removeNode(Node node) {
@@ -90,6 +81,9 @@ public class Graph {
 
 
     public Node getNode(int position) {
+        if (this.nodeArr[position] == null) {
+            return null;
+        }
         return this.nodeArr[position];
     }
 
@@ -99,27 +93,17 @@ public class Graph {
 
     public boolean containsNode(Node node) {
         char nodeName = node.getName();
-        for (int i = 0; i < nodeCount; i++) {
-            Node n = nodeArr[i];
-            if (n.getName() == nodeName) {
-                return true;
-            }
-        }
-        return false;
+        return this.nodeArr[nodeName - 'A'] != null;
     }
     public boolean containsNode(char nodeName) {
-        for (int i = 0; i < this.nodeArr.length; i++) {
-            if (this.nodeArr[i].getName() == nodeName) {
-                return true;
-            }
-        }
-        return false;
+        return this.nodeArr[nodeName - 'A'] != null;
     }
 
     public Edge[] randomlyConnectNodes() {
         //calculate how many edges there should be
         int degSum = 0;
-        for (int i = 0; i < nodeCount; i++) {
+        for (int i = 0; i < 26; i++) {
+            if (nodeArr[i] == null) continue;
             degSum += nodeArr[i].getDegree();
         }
         int edgeCount = degSum / 2;
@@ -127,13 +111,15 @@ public class Graph {
         int edgeIx = 0;
         //Takes nodes (not connected yet, Node.connectedNodes is empty) and connects them randomly (adds each other to Nodes.connectedNodes)
         Random random = new Random();
-        for (int i = 0; i < nodeCount(); i++) {
-            Node currNode = getNode(i);
+        for (int i = 0; i < 26; i++) {
+            if (this.nodeArr[i] == null) continue;
+            Node currNode = this.nodeArr[i];
 
             //find available nodes
             Graph availableNodes = new Graph();
-            for (int j = 0; j < nodeCount(); j++) {
-                Node candidate = getNode(j);
+            for (int j = 0; j < 26; j++) {
+                if (this.nodeArr[j] == null) continue;
+                Node candidate = this.nodeArr[j];
                 if (j != i && candidate.available() && !currNode.isConnectedTo(candidate)) {
                     availableNodes.addNode(candidate);
                 }
@@ -145,18 +131,29 @@ public class Graph {
                 //if we had connected 2 nodes that must not be connected, reset the whole process and rerun the function
                 if(availableNodes.nodeCount() == 0) {
                     //unconnect all nodes connected so far
-                    for (int n = 0; n < nodeCount(); n++) {
+                    for (int n = 0; n < 26; n++) {
+                        if (getNode(n) == null) continue;
                         getNode(n).connectedNodes = new Graph();
                     }
                     return this.randomlyConnectNodes();
                 } else {
-                    int connectToIx = random.nextInt(availableNodes.nodeCount());
-                    Node targetNode = availableNodes.getNode(connectToIx);
+                    int connectTo = random.nextInt(availableNodes.nodeCount()) + 1;
+                    int pointer = -1;
+                    int counter = 0;
+                    while (counter < connectTo && pointer < 25) {
+                        pointer++;
+                        if (availableNodes.getNode(pointer) != null) {
+                            counter++;
+                        }
+
+                    }
+
+                    Node targetNode = availableNodes.getNode(pointer);
 
                     currNode.connect(targetNode);
                     targetNode.connect(currNode);
                     o[edgeIx++] = new Edge(currNode, targetNode);
-                    availableNodes.removeNode(connectToIx);
+                    availableNodes.removeNode(pointer);
                 }
 
             }
@@ -167,8 +164,8 @@ public class Graph {
 
     public Graph getIsolatedNodes() {
         Graph iso = new Graph();
-        for (int i = 0; i < nodeCount(); i++) {
-            if (getNode(i).getDegree() == 0) {
+        for (int i = 0; i < 26; i++) {
+            if (getNode(i) != null && getNode(i).getDegree() == 0) {
                 iso.addNode(getNode(i));
             }
         }
@@ -177,7 +174,8 @@ public class Graph {
 
     public boolean isCompleteGraph() {
         int degSum = 0;
-        for (int n = 0; n < this.nodeCount(); n++) {
+        for (int n = 0; n < 26; n++) {
+            if (this.nodeArr[n] == null) continue;
             Node node = this.nodeArr[n];
             degSum += node.getDegree();
         }
@@ -249,7 +247,8 @@ public class Graph {
             unvisitedNodes.removeNode(visitedNode);
         }
         Graph neighbours = visitedNode.connectedNodes;
-        for (int i = 0; i < neighbours.nodeCount(); i++) {
+        for (int i = 0; i < 26; i++) {
+            if (neighbours.getNode(i) == null) continue;
             //foreach neighbour, visit neighbour
             if (unvisitedNodes.containsNode(neighbours.getNode(i))) {
                 visit(neighbours.getNode(i), unvisitedNodes);
@@ -275,8 +274,11 @@ public class Graph {
         Graph graph = this;
         int n = graph.nodeCount();
         int[][] o = new int[n][n];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
+        for (int i = 0; i < 26; i++) {
+            if (this.nodeArr[i] == null) continue;
+            for (int j = 0; j < 26; j++) {
+                if (this.nodeArr[j] == null) continue;
+
                 if (graph.getNode(i).isConnectedTo(graph.getNode(j))) {
                     o[i][j] = 1;
                     // o[j][i] = 1;
@@ -295,7 +297,8 @@ public class Graph {
         }
 
         //choose a coordinate that had not been chosen before
-        for (int n = 0; n < nodeCount; n++) {
+        for (int n = 0; n < 26; n++) {
+            if (nodeArr[n] == null) continue;
             int coorIx = -1;
             do {
                 coorIx = random.nextInt(70);
@@ -312,7 +315,8 @@ public class Graph {
     }
     public void printNodeNames() {
         Console console = Main.console;
-        for (int i = 0; i < nodeCount; i++) {
+        for (int i = 0; i < 26; i++) {
+            if (nodeArr[i] == null) continue;
             Node node = nodeArr[i];
             Coordinate c = node.getRelativeCoordinate().calculateAbsoluteCoordinate(0,0, Coordinate.MAIN_GRAPH);
             console.getTextWindow().setCursorPosition(c.getX(), c.getY());

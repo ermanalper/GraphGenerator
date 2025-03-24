@@ -6,13 +6,8 @@ public class Node {
     private Coordinate coordinate;
 
 
-
-
-
     //connectedNodes : if any node has an edge with this node, it will appear in connectedNodes
     public Graph connectedNodes;
-
-
 
 
 
@@ -23,6 +18,8 @@ public class Node {
         //connectedNodes will be initialized as an empty array, then nodes will be added at DegreeOperation.randomlyConnectNodes(NodeArray nodes)
         this.connectedNodes = new Graph();
     }
+
+
     public char getName() {
         return this.name;
     }

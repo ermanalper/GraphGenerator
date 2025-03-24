@@ -1,8 +1,6 @@
 import enigma.console.Console;
 import enigma.core.Enigma;
 
-
-import javax.swing.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Random;
@@ -149,12 +147,16 @@ public class Main {
 
         //print the relation matrix
         console.getTextWindow().setCursorPosition(40, 0);
-        for (int i = 0; i < graph.nodeCount(); i++) {
-            console.getTextWindow().output(graph.getNode(i).getName());
+        for (int i = 0; i < 26; i++) {
+            if (graph.getNode(i) != null) {
+                console.getTextWindow().output(graph.getNode(i).getName());
+            }
+
         }
         row = 1;
         int[][] relationMatrix = graph.buildRelationMatrix();
-        for (int i = 0; i < graph.nodeCount(); i++) {
+        for (int i = 0; i < 26; i++) {
+            if (graph.getNode(i) == null) continue;
             console.getTextWindow().setCursorPosition(38, row++);
             console.getTextWindow().output(graph.getNode(i).getName() + " ");
             int[] row = relationMatrix[i];
@@ -654,8 +656,11 @@ public class Main {
                         if (isoVertices.nodeCount() == 0) {
                             console.getTextWindow().output("-");
                         } else {
-                            for (int i = 0; i < isoVertices.nodeCount(); i++) {
-                                console.getTextWindow().output(isoVertices.getNode(i).getName() + " ");
+                            for (int i = 0; i < 26; i++) {
+                                if (isoVertices.getNode(i) != null) {
+                                    console.getTextWindow().output(isoVertices.getNode(i).getName() + " ");
+                                }
+
                             }
                         }
                         break;
@@ -686,15 +691,15 @@ public class Main {
                 console.getTextWindow().setCursorPosition(0, row++);
                 switch (e.getKeyCode()) {
                     case KeyEvent.VK_0:
-                        drawingMode = 0;
+                        drawingMode = Graph.DRAWING_MODE_0;
                         console.getTextWindow().output("Drawing method is set successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_1:
-                        drawingMode = 1;
+                        drawingMode = Graph.DRAWING_MODE_1;
                         console.getTextWindow().output("Drawing method is set successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_2:
-                        drawingMode = 2;
+                        drawingMode = Graph.DRAWING_MODE_2;
                         console.getTextWindow().output("Drawing method is set successfully. Press Esc for the main menu");
                         break;
                     default:
