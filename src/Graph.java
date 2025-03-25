@@ -13,6 +13,9 @@ public class Graph {
 
 
 
+
+
+
     private Node[] nodeArr;
     private Edge[] edgeArr;
     private int nodeCount;
@@ -27,6 +30,8 @@ public class Graph {
 
     public Graph(Graph nodeArr) {
         //clones nodeArr and initializes a new one
+        this.nodeCount = nodeArr.nodeCount();
+
         Node[] newArray = new Node[26];
         for (int i = 0; i < 26; i++) {
             if (nodeArr.getNode(i) == null) continue;
@@ -34,7 +39,7 @@ public class Graph {
             newArray[nodeName - 'A'] = nodeArr.getNode(i);
         }
         this.nodeArr = newArray;
-        this.nodeCount = nodeArr.nodeCount();
+
     }
     public Graph(int[] degreeSequence, char firstNodeName) {
         //creates a new non-empty NodeArray with Nodes that satisfy the degree sequence.
@@ -328,7 +333,7 @@ public class Graph {
     public String getAllC3s() {
         int edgeCount = this.edgeArr.length;
         String c3Piles = "";
-
+        int threshold = 40;
         //this n^3 iteration will reach all edge combinations of 3
         for (int i = 0; i < edgeCount - 2; i++) {
             for (int j = i + 1; j < edgeCount - 1; j++) {
@@ -355,6 +360,10 @@ public class Graph {
                     }
                     if (visitedNodeNames.length() == 3) {
                         c3Piles += String.join(", ", visitedNodeNames) + " - ";
+                        if (c3Piles.length() > threshold) {
+                            c3Piles += "\n";
+                            threshold += 40;
+                        }
                     }
 
                 }
@@ -365,6 +374,83 @@ public class Graph {
         }
         /// if c3Piles.length() == 0  -> no C3
         return c3Piles;
+    }
+
+
+    public String bipartiteSeparation() {
+        Graph pos = new Graph();
+        Graph neg = new Graph();///if a node does not occur in either positives or negatives, this node is not visited;
+                                ///but having a node in either of these arrays, DOES NOT mean that we had visited that node
+        Graph unvisited = new Graph(this); ///hence, we still need to clone this graph and create an unvisited nodes array, to jump from one connected
+                                                                                    /// component to another, if needed
+        Queue q = new Queue(1000);
+        int nextNodeIx = -1;
+
+        while(unvisited.nodeCount() > 0) {
+            Node nextNode = null;
+            /// get the next node
+            while (nextNode == null) {
+                nextNode = unvisited.getNode(++nextNodeIx);
+            }
+            /// add a starting node from the connected component, if there is no more than 1 connected component in the whole graph, while-loops above will run only once
+            q.enqueue(nextNode);
+            pos.addNode(nextNode);
+            while (!q.isEmpty()) {
+                Node currNode = q.dequeue();
+                unvisited.removeNode(currNode);
+                /// determine the current node's sign: pos(+) or neg(-)
+                if (pos.containsNode(currNode)) {
+                    //if this node is marked +, mark its neighbours - , and enqueue them
+                    for (int i = 0; i < 26; i++) {
+                        Node neighbour = currNode.connectedNodes.getNode(i);
+                        if (neighbour == null) continue;
+                        neg.addNode(neighbour);
+                        if (unvisited.containsNode(neighbour)) {
+                            q.enqueue(neighbour);
+                        }
+
+                    }
+
+                } else if (neg.containsNode(currNode)) {
+                    //if this node is marked -, mark its neighbours + , and enqueue them
+                    for (int i = 0; i < 26; i++) {
+                        Node neighbour = currNode.connectedNodes.getNode(i);
+                        if (neighbour == null) continue;
+                        pos.addNode(neighbour);
+                        if (unvisited.containsNode(neighbour)) {
+                            q.enqueue(neighbour);
+                        }
+                    }
+                }
+            }
+        }
+        String o = "Yes. V1={";
+        for (int i = 0; i < 26; i++) {
+            Node n = pos.getNode(i);
+            if (n == null) continue;
+            if (neg.containsNode(n)) {
+                return "No.";
+            }
+            o += n.getName() + ",";
+        }
+        o = o.substring(0, o.length() - 1) + "} V2={"; //delete last ','
+        for (int i = 0; i < 26; i++) {
+            Node n = neg.getNode(i);
+            if (n == null) continue;
+            if (pos.containsNode(n)) {
+                return "No.";
+            }
+            o += n.getName() + ",";
+        }
+        o = o.substring(0, o.length() - 1) + '}';
+        return o;
+
+
+
+
+
+
+
     }
 
 

@@ -31,9 +31,9 @@ public class Main {
     private static int maxDegree;
 
     private static void clearConsole() {
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < row + 50; i++) {
             console.getTextWindow().setCursorPosition(0, i);
-            console.getTextWindow().output("                                                                                                                                                                       ");
+            console.getTextWindow().output("                                                                                                                                                                                                                                           ");
         }
         row = 0;
     }
@@ -645,6 +645,7 @@ public class Main {
                         break;
                     case KeyEvent.VK_2: /// contains c3
                         String o = graph.getAllC3s();
+                        row += o.length() / 40;
                         if (o.isEmpty()) {
                             console.getTextWindow().output("No");
                         } else {
@@ -667,6 +668,10 @@ public class Main {
                     case KeyEvent.VK_4: /// complete graph
                         console.getTextWindow().output(String.valueOf(graph.isCompleteGraph()));
                         break;
+                    case KeyEvent.VK_5:
+                        console.getTextWindow().output(graph.bipartiteSeparation());
+                        break;
+
 
 
 
