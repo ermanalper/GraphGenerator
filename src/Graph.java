@@ -18,19 +18,19 @@ public class Graph {
 
     private Node[] nodeArr;
     private Edge[] edgeArr;
-    private int nodeCount;
+    //private int nodeCount;
 
 
 
     public Graph() {
         //initializes an empty NodeArray
         this.nodeArr = new Node[26];
-        nodeCount = 0;
+        //nodeCount = 0;
     }
 
     public Graph(Graph nodeArr) {
         //clones nodeArr and initializes a new one
-        this.nodeCount = nodeArr.nodeCount();
+        //this.nodeCount = nodeArr.nodeCount();
 
         Node[] newArray = new Node[26];
         for (int i = 0; i < 26; i++) {
@@ -53,15 +53,18 @@ public class Graph {
             nodeArr[nodeName - 'A'] = new Node(nodeName, degreeSequence[i]);
         }
         this.nodeArr = nodeArr;
-        this.nodeCount = degreeSequence.length;
+        //this.nodeCount = degreeSequence.length;
     }
 
 
 
 
     public void addNode(Node node) {
-        this.nodeArr[node.getName() - 'A'] = node;
-        nodeCount++;
+        if(this.nodeArr[node.getName() - 'A'] == null) {
+            this.nodeArr[node.getName() - 'A'] = node;
+            //nodeCount++;
+        }
+
     }
     public void setEdgeArray(Edge[] edgeArr) {
         this.edgeArr = edgeArr;
@@ -71,8 +74,11 @@ public class Graph {
     }
 
     public void removeNode(char nodeName) {
-        this.nodeArr[nodeName - 'A'] = null;
-        nodeCount--;
+        if (this.nodeArr[nodeName - 'A'] != null) {
+            this.nodeArr[nodeName - 'A'] = null;
+            //nodeCount--;
+        }
+
     }
 
     public void removeNode(Node node) {
@@ -93,6 +99,11 @@ public class Graph {
     }
 
     public int nodeCount() {
+        /// increasing and decreasing according to the add() - remove() functions caused some problems, hence this felt safer
+        int nodeCount = 0;
+        for (int i = 0; i < 26; i++) {
+            if (this.nodeArr[i] != null) nodeCount++;
+        }
         return nodeCount;
     }
 
@@ -377,18 +388,19 @@ public class Graph {
     }
 
 
-    public String bipartiteSeparation() {
+    public Graph[] bipartiteSeparation() { // returns new Graph[] {pos, neg} or null if the graph is not bipartite
         Graph pos = new Graph();
         Graph neg = new Graph();///if a node does not occur in either positives or negatives, this node is not visited;
                                 ///but having a node in either of these arrays, DOES NOT mean that we had visited that node
         Graph unvisited = new Graph(this); ///hence, we still need to clone this graph and create an unvisited nodes array, to jump from one connected
                                                                                     /// component to another, if needed
         Queue q = new Queue(1000);
-        int nextNodeIx = -1;
+
 
         while(unvisited.nodeCount() > 0) {
             Node nextNode = null;
             /// get the next node
+            int nextNodeIx = -1;
             while (nextNode == null) {
                 nextNode = unvisited.getNode(++nextNodeIx);
             }
@@ -398,58 +410,96 @@ public class Graph {
             while (!q.isEmpty()) {
                 Node currNode = q.dequeue();
                 unvisited.removeNode(currNode);
-                /// determine the current node's sign: pos(+) or neg(-)
-                if (pos.containsNode(currNode)) {
-                    //if this node is marked +, mark its neighbours - , and enqueue them
-                    for (int i = 0; i < 26; i++) {
-                        Node neighbour = currNode.connectedNodes.getNode(i);
-                        if (neighbour == null) continue;
-                        neg.addNode(neighbour);
-                        if (unvisited.containsNode(neighbour)) {
-                            q.enqueue(neighbour);
-                        }
 
+                for (int i = 0; i < 26; i++) {
+                    Node neighbour = currNode.connectedNodes.getNode(i);
+                    if (neighbour == null) continue;
+                    /// determine the current node's sign: pos(+) or neg(-)
+                    if (pos.containsNode(currNode)) { // if curr node is labeled +, label its neighbours -
+                        neg.addNode(neighbour);
+                    }
+                    if (neg.containsNode(currNode)) { //if curr node is labeled -, label its neighbours +
+                        pos.addNode(neighbour);
                     }
 
-                } else if (neg.containsNode(currNode)) {
-                    //if this node is marked -, mark its neighbours + , and enqueue them
-                    for (int i = 0; i < 26; i++) {
-                        Node neighbour = currNode.connectedNodes.getNode(i);
-                        if (neighbour == null) continue;
-                        pos.addNode(neighbour);
-                        if (unvisited.containsNode(neighbour)) {
-                            q.enqueue(neighbour);
-                        }
+                    if (unvisited.containsNode(neighbour)) {
+                        q.enqueue(neighbour);
                     }
                 }
             }
         }
-        String o = "Yes. V1={";
         for (int i = 0; i < 26; i++) {
             Node n = pos.getNode(i);
             if (n == null) continue;
             if (neg.containsNode(n)) {
-                return "No.";
+                return null;
             }
-            o += n.getName() + ",";
+
         }
-        o = o.substring(0, o.length() - 1) + "} V2={"; //delete last ','
+
         for (int i = 0; i < 26; i++) {
             Node n = neg.getNode(i);
             if (n == null) continue;
             if (pos.containsNode(n)) {
-                return "No.";
+                return null;
             }
-            o += n.getName() + ",";
+
         }
-        o = o.substring(0, o.length() - 1) + '}';
-        return o;
+
+        return new Graph[] {pos, neg};
 
 
 
 
 
 
+
+    }
+
+    public boolean isCycle() {
+        /// returns true if and only if the whole graph is cycle, does not search its subgraphs
+        if (!this.isConnected() || this.nodeCount() < 3) return false;
+        for (int i = 0; i < 26; i++) {
+            if (this.getNode(i) != null && this.getNode(i).getDegree() != 2) return false; //all degrees must be 2
+        }
+        return true;
+    }
+
+    public Node wheelCenter() {
+        //if wheel graph : returns the center node
+        //if not : return null
+        /// works on the whole graph, does not include its subgraphs
+        if (!this.isConnected() || this.nodeCount() < 4) return null; //wheel graphs must be connected, and have a cycle graph surrounding the center (3 + 1 = 4)
+        Node center = null;
+        for (int i = 0; i < 26; i++) {
+            Node currNode = this.getNode(i);
+            if (currNode == null) continue;
+            /// all nodes other than the center node should have a degree of 3
+            if (currNode.getDegree() != 3) { //if its degree is not 3, it might be the center node
+                if (center != null) return null; //another node is already labeled as the center-node-candidate
+                else {
+                    center = currNode;
+                }
+            }
+        }
+
+        //all the nodes have a degree of 3, it might be a W3 graph with 4 nodes
+        /// choose any random node as the center node
+        if (center == null) {
+            if (this.nodeCount() == 4) {
+                int ix = 0;
+                while (center == null) {
+                    center = this.getNode(ix++);
+                }
+                return center;
+            } else {
+                return null; // all the nodes have a degree of 3, but it is not a W3 graph
+            }
+        }
+
+        if (this.nodeCount() - 1 == center.getDegree())
+            return center;
+        return null;
 
     }
 

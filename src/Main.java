@@ -30,6 +30,10 @@ public class Main {
     private static int minDegree;
     private static int maxDegree;
 
+    private static Graph[] bipartiteInfo;
+
+
+
     private static void clearConsole() {
         for (int i = 0; i < row + 50; i++) {
             console.getTextWindow().setCursorPosition(0, i);
@@ -189,7 +193,7 @@ public class Main {
         console.getTextWindow().setCursorPosition(38, row++);
         console.getTextWindow().output("9. Star Graph (Sn)?");
         console.getTextWindow().setCursorPosition(38, row++);
-        console.getTextWindow().output("10. Isomorphic?");
+        console.getTextWindow().output("0. Isomorphic?");
 
         int n = graph.nodeCount();
         int[][] minMatrix = new int[n][n];
@@ -218,6 +222,9 @@ public class Main {
             }
         }
         printRelationMatrices(relationMatrices, minMatrix);
+
+        bipartiteInfo = graph.bipartiteSeparation();
+
 
 
 
@@ -668,8 +675,65 @@ public class Main {
                     case KeyEvent.VK_4: /// complete graph
                         console.getTextWindow().output(String.valueOf(graph.isCompleteGraph()));
                         break;
-                    case KeyEvent.VK_5:
-                        console.getTextWindow().output(graph.bipartiteSeparation());
+                    case KeyEvent.VK_5: ///bipartite
+                        if (bipartiteInfo == null) console.getTextWindow().output("No.");
+
+                        else {
+                            Graph pos = bipartiteInfo[0];
+                            Graph neg = bipartiteInfo[1];
+                            String out = "Yes. V1={";
+                            for (int i = 0; i < 26; i++) {
+                                if (pos.getNode(i) != null) out += pos.getNode(i).getName() + ",";
+                            }
+                            out = out.substring(0, out.length() - 1); //delete last comma ','
+                            out += "} V2={";
+                            for (int i = 0; i < 26; i++) {
+                                if (neg.getNode(i) != null) out += neg.getNode(i).getName() + ",";
+                            }
+                            out = out.substring(0, out.length() - 1); //delete last comma ','
+                            out += "}";
+                            console.getTextWindow().output(out);
+
+                        }
+                        break;
+
+                    case KeyEvent.VK_6: ///complete bipartite
+                        if (bipartiteInfo == null) console.getTextWindow().output("No."); //the graph is not even bipartite, hence it cannot be "complete" bipartite
+                        else {
+                            Graph pos = bipartiteInfo[0];
+                            Graph neg = bipartiteInfo[1];
+                            int edgeCount = graph.getEdgeArray().length;
+                            if (pos.nodeCount() * neg.nodeCount() == edgeCount) { // complete bipartite
+                                String out = "Yes. V1={";
+                                for (int i = 0; i < 26; i++) {
+                                    if (pos.getNode(i) != null) out += pos.getNode(i).getName() + ",";
+                                }
+                                out = out.substring(0, out.length() - 1); //delete last comma ','
+                                out += "} V2={";
+                                for (int i = 0; i < 26; i++) {
+                                    if (neg.getNode(i) != null) out += neg.getNode(i).getName() + ",";
+                                }
+                                out = out.substring(0, out.length() - 1); //delete last comma ','
+                                out += "}";
+                                console.getTextWindow().output(out);
+
+                            } else {
+                                console.getTextWindow().output("No."); //bipartite, but not complete bipartite
+                            }
+
+
+                        }
+                        break;
+                    case KeyEvent.VK_7: ///cycle graph
+                        console.getTextWindow().output(String.valueOf(graph.isCycle()));
+                        break;
+                    case KeyEvent.VK_8: ///wheel graph
+                        Node center = graph.wheelCenter();
+                        if (center == null) {
+                            console.getTextWindow().output("No.");
+                        } else {
+                            console.getTextWindow().output("Yes. Center: " + center.getName());
+                        }
                         break;
 
 
