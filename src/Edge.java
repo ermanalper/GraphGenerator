@@ -10,7 +10,10 @@ public class Edge {
         this.node2 = node2;
     }
 
-    public void drawEdge(int[][] inkedPoints, int drawingMode) {
+    public void drawEdge(int[][] inkedPoints, int drawingMode, boolean whichGraph, int mainGraphNodeCount, int secondaryGraphNodeCount) {
+        /// if you are calculating the absolute coordinates for the main graph, the last two parameters are unnecessary
+        int shiftIx = 0;
+        if(!whichGraph) shiftIx += 48 + mainGraphNodeCount + secondaryGraphNodeCount;
         String[] palette = {};
         if (drawingMode == 1) {
             palette = new String[]{"+", "o", "#", "@"};
@@ -27,11 +30,11 @@ public class Edge {
 
         /// START AND END POINTS ARE CHOSEN RANDOMLY, THIS SHOULD MAKE THE EDGES OVERLAP LESS
         if (bound == 0) {
-            startingPoint = node1.getRelativeCoordinate().calculateAbsoluteCoordinate(0, 0, Coordinate.MAIN_GRAPH);
-            endingPoint = node2.getRelativeCoordinate().calculateAbsoluteCoordinate(0, 0, Coordinate.MAIN_GRAPH);
+            startingPoint = node1.getRelativeCoordinate().calculateAbsoluteCoordinate(Graph.MAIN_GRAPH, 0, 0);
+            endingPoint = node2.getRelativeCoordinate().calculateAbsoluteCoordinate(Graph.MAIN_GRAPH, 0, 0);
         } else {
-            startingPoint = node2.getRelativeCoordinate().calculateAbsoluteCoordinate(0, 0, Coordinate.MAIN_GRAPH);
-            endingPoint = node1.getRelativeCoordinate().calculateAbsoluteCoordinate(0, 0, Coordinate.MAIN_GRAPH);
+            startingPoint = node2.getRelativeCoordinate().calculateAbsoluteCoordinate(Graph.MAIN_GRAPH, 0, 0);
+            endingPoint = node1.getRelativeCoordinate().calculateAbsoluteCoordinate(Graph.MAIN_GRAPH, 0, 0);
         }
 
 
@@ -65,7 +68,7 @@ public class Edge {
 
 
 
-            console.getTextWindow().setCursorPosition(printX, printY);
+            console.getTextWindow().setCursorPosition(printX + shiftIx, printY);
             console.getTextWindow().output(ink);
         }
 
@@ -73,5 +76,6 @@ public class Edge {
     public Node[] getNodes() {
         return new Node[] {this.node1, this.node2};
     }
+
 
 }

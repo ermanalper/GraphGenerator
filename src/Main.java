@@ -26,7 +26,9 @@ public class Main {
     private static int newGraphVertexCount;
     private static int[] newGraphDegreeSequence;
     private static int ixPointer;
-    private static Graph[] savedGraphs = new Graph[10]; //savedGraphs[9] is always the main graph
+    private static Graph[] depotGraphs = new Graph[9];
+    private static Graph mainGraph;
+    private static Graph secondaryGraph;
     private static int minDegree;
     private static int maxDegree;
 
@@ -146,8 +148,7 @@ public class Main {
             }
         }
         //take the main graph,
-        /// savedGraphs[9] is always the main graph
-        Graph graph = savedGraphs[9];
+        Graph graph = mainGraph;
 
         //print the relation matrix
         console.getTextWindow().setCursorPosition(40, 0);
@@ -438,23 +439,29 @@ public class Main {
                         specifyDegreeIntervalsMethodSetup();
                         break;
                     case KeyEvent.VK_3:
-                        console.getTextWindow().removeKeyListener(mainMenuKeyListener);
-                        console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
-                        console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
-                        console.getTextWindow().removeKeyListener(specifyDegreeIntervalsMethodKeyListener);
-                        console.getTextWindow().removeKeyListener(chooseDrawingMethodKeyListener);
-                        console.getTextWindow().removeKeyListener(graphTransferMenuKeyListener);
+                        if (mainGraph == null) {
+                            console.getTextWindow().setCursorPosition(0, 19);
+                            console.getTextWindow().output("Error! You must create the main graph first.");
+                        } else {
+                            console.getTextWindow().removeKeyListener(mainMenuKeyListener);
+                            console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
+                            console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
+                            console.getTextWindow().removeKeyListener(specifyDegreeIntervalsMethodKeyListener);
+                            console.getTextWindow().removeKeyListener(chooseDrawingMethodKeyListener);
+                            console.getTextWindow().removeKeyListener(graphTransferMenuKeyListener);
 
 
-                        console.getTextWindow().addKeyListener(graphTestMenuKeyListener);
-                        clearConsole();
-                        graphTestMenuSetup();
-                        Graph graph = savedGraphs[9];
-                        int[][] inkedPoints = new int[25][37];
-                        for (Edge edge : graph.getEdgeArray()) {
-                            edge.drawEdge(inkedPoints, drawingMode);
+                            console.getTextWindow().addKeyListener(graphTestMenuKeyListener);
+                            clearConsole();
+                            graphTestMenuSetup();
+
+                            int[][] inkedPoints = new int[25][37];
+                            for (Edge edge : mainGraph.getEdgeArray()) {
+                                edge.drawEdge(inkedPoints, drawingMode, Graph.MAIN_GRAPH, 0, 0);
+                            }
+                            mainGraph.printNodeNames(Graph.MAIN_GRAPH, 0, 0);
                         }
-                        graph.printNodeNames();
+
                         break;
                     case KeyEvent.VK_4:
                         setupDrawMethodChoose();
@@ -537,7 +544,7 @@ public class Main {
                                     Graph graph = new Graph(newGraphDegreeSequence, 'A');
                                     graph.setEdgeArray(graph.randomlyConnectNodes());
                                     graph.randomlyPlaceNodes();
-                                    savedGraphs[9] = graph; //save new graph as the main graph
+                                    mainGraph = graph; //save new graph as the main graph
                                     console.getTextWindow().output("New graph is successfully created. Press Esc for the main menu");
                                 } else {
                                     console.getTextWindow().output("Creating new graph is failed! Invalid degree sequence for a simple graph. Press Esc for the main menu.");
@@ -612,7 +619,7 @@ public class Main {
                                 Graph graph = new Graph(degreeSequence, 'A');
                                 graph.setEdgeArray(graph.randomlyConnectNodes());
                                 graph.randomlyPlaceNodes();
-                                savedGraphs[9] = graph;
+                                mainGraph = graph;
                                 console.getTextWindow().output("Graph created successfully. Press Esc for main menu");
                             } else {
                                 console.getTextWindow().output("Invalid values. Press Esc for main menu");
@@ -644,14 +651,14 @@ public class Main {
                 if (row < 25) {
                     row = 25;
                 }
-                Graph graph = savedGraphs[9];//main graph is at index 9
+
                 console.getTextWindow().setCursorPosition(0, row++);
                 switch(e.getKeyCode()) {
                     case KeyEvent.VK_1: /// connected
-                        console.getTextWindow().output(String.valueOf(graph.isConnected()));
+                        console.getTextWindow().output(String.valueOf(mainGraph.isConnected()));
                         break;
                     case KeyEvent.VK_2: /// contains c3
-                        String o = graph.getAllC3s();
+                        String o = mainGraph.getAllC3s();
                         row += o.length() / 40;
                         if (o.isEmpty()) {
                             console.getTextWindow().output("No");
@@ -660,7 +667,7 @@ public class Main {
                         }
                         break;
                     case KeyEvent.VK_3: /// isolated vertices
-                        Graph isoVertices = graph.getIsolatedNodes();
+                        Graph isoVertices = mainGraph.getIsolatedNodes();
                         if (isoVertices.nodeCount() == 0) {
                             console.getTextWindow().output("-");
                         } else {
@@ -673,7 +680,7 @@ public class Main {
                         }
                         break;
                     case KeyEvent.VK_4: /// complete graph
-                        console.getTextWindow().output(String.valueOf(graph.isCompleteGraph()));
+                        console.getTextWindow().output(String.valueOf(mainGraph.isCompleteGraph()));
                         break;
                     case KeyEvent.VK_5: ///bipartite
                         if (bipartiteInfo == null) console.getTextWindow().output("No.");
@@ -702,7 +709,7 @@ public class Main {
                         else {
                             Graph pos = bipartiteInfo[0];
                             Graph neg = bipartiteInfo[1];
-                            int edgeCount = graph.getEdgeArray().length;
+                            int edgeCount = mainGraph.getEdgeArray().length;
                             if (pos.nodeCount() * neg.nodeCount() == edgeCount) { // complete bipartite
                                 String out = "Yes. V1={";
                                 for (int i = 0; i < 26; i++) {
@@ -725,16 +732,63 @@ public class Main {
                         }
                         break;
                     case KeyEvent.VK_7: ///cycle graph
-                        console.getTextWindow().output(String.valueOf(graph.isCycle()));
+                        console.getTextWindow().output(String.valueOf(mainGraph.isCycle()));
                         break;
                     case KeyEvent.VK_8: ///wheel graph
-                        Node center = graph.wheelCenter();
+                        Node center = mainGraph.wheelCenter();
                         if (center == null) {
                             console.getTextWindow().output("No.");
                         } else {
                             console.getTextWindow().output("Yes. Center: " + center.getName());
                         }
                         break;
+                    case KeyEvent.VK_0: ///isomorphism
+                        if (secondaryGraph == null) {
+                            console.getTextWindow().output("Error! You must choose a secondary graph from the \ngraph transfer menu.");
+                            row++;
+                        } else {
+                            console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
+                            //clear the info field on the right side of the screen
+                            int mainNodeCount = mainGraph.nodeCount();
+                            for (int i = 0; i <= mainNodeCount; i++) {
+                                console.getTextWindow().setCursorPosition(43 + mainNodeCount, i);
+                                console.getTextWindow().output("                                                                                                                                    ");
+                            }
+                            for (int i = mainNodeCount + 1; i < 25; i++) {
+                                console.getTextWindow().setCursorPosition(37, i);
+                                console.getTextWindow().output("                                                                                                                        ");
+                            }
+                            int n1 = mainGraph.nodeCount();
+                            n1 = ((n1 + 1) * (n1 + 4)) / 3;
+                            for (int i = 25; i < n1; i++) {
+                                console.getTextWindow().setCursorPosition(0, i);
+                                console.getTextWindow().output("                                                                                                                                                                                                                                   ");
+                            }
+                            row = 25;
+                            // the field is cleared above
+                            int n2 = secondaryGraph.nodeCount();
+
+                            //print background
+                            for (int i = 0; i < 7; i++) {
+                                for (int j = 0; j < 10; j++) {
+                                    int x = 4 * i;
+                                    int y = (4 * j) + (48 + n1 + n2);
+                                    console.getTextWindow().setCursorPosition(y, x);
+                                    console.getTextWindow().output('.');
+                                }
+                            }
+                            Edge[] edges = secondaryGraph.getEdgeArray();
+                            int[][] inkedPoints = new int[25][37];
+                            for (Edge edge : edges) {
+                                edge.drawEdge(inkedPoints, drawingMode, Graph.SECONDARY_GRAPH, n1, n2);
+                            }
+                            secondaryGraph.printNodeNames(Graph.SECONDARY_GRAPH, n1, n2);
+
+
+
+                        }
+
+
 
 
 
@@ -796,11 +850,11 @@ public class Main {
                 console.getTextWindow().setCursorPosition(0, 0);
                 switch (e.getKeyCode()) {
                     case KeyEvent.VK_G:
-                    savedGraphs[8]=savedGraphs[9];
+                    secondaryGraph=mainGraph;
                     console.getTextWindow().output("Main graph copied second graph successfully. Press Esc for the main menu");
                     break;
                     case KeyEvent.VK_H:
-                        savedGraphs[9]=savedGraphs[8];
+                        mainGraph= secondaryGraph;
                         console.getTextWindow().output("Second graph copied Main graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_L:
@@ -816,75 +870,75 @@ public class Main {
                         6=3....
                          */
                     case KeyEvent.VK_Q:
-                            savedGraphs[8]=savedGraphs[9];
+                            depotGraphs[8]=mainGraph;
                             console.getTextWindow().output("Main graph copied 1. depot graph successfully. Press Esc for the main menu");
                             break;
                     case KeyEvent.VK_W:
-                                savedGraphs[7]=savedGraphs[9];
+                                depotGraphs[7]=mainGraph;
                                 console.getTextWindow().output("Main graph copied 2. depot graph successfully. Press Esc for the main menu");
                                 break;
                     case KeyEvent.VK_E:
-                                    savedGraphs[6]=savedGraphs[9];
+                                    depotGraphs[6]=mainGraph;
                                     console.getTextWindow().output("Main graph copied 3. depot graph successfully. Press Esc for the main menu");
                                     break;
                     case KeyEvent.VK_R:
-                        savedGraphs[5]=savedGraphs[9];
+                        depotGraphs[5]=mainGraph;
                         console.getTextWindow().output("Main graph copied 4. depot graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_T:
-                        savedGraphs[4]=savedGraphs[9];
+                        depotGraphs[4]=mainGraph;
                         console.getTextWindow().output("Main graph copied 5. depot graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_Y:
-                        savedGraphs[3]=savedGraphs[9];
+                        depotGraphs[3]=mainGraph;
                         console.getTextWindow().output("Main graph copied 6. depot graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_U:
-                        savedGraphs[2]=savedGraphs[9];
+                        depotGraphs[2]=mainGraph;
                         console.getTextWindow().output("Main graph copied 7. depot graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_I:
-                        savedGraphs[1]=savedGraphs[9];
+                        depotGraphs[1]=mainGraph;
                         console.getTextWindow().output("Main graph copied 8. depot graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_O:
-                        savedGraphs[0]=savedGraphs[9];
+                        depotGraphs[0]=mainGraph;
                         console.getTextWindow().output("Main graph copied 9. depot graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_1:
-                        savedGraphs[9]=savedGraphs[8];
+                        mainGraph= depotGraphs[8];
                         console.getTextWindow().output("1. Depot graph copied main graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_2:
-                        savedGraphs[9]=savedGraphs[7];
+                        mainGraph= depotGraphs[7];
                         console.getTextWindow().output("2. Depot graph copied main graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_3:
-                        savedGraphs[9]=savedGraphs[6];
+                        mainGraph= depotGraphs[6];
                         console.getTextWindow().output("3. Depot graph copied main graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_4:
-                        savedGraphs[9]=savedGraphs[5];
+                        mainGraph= depotGraphs[5];
                         console.getTextWindow().output("4. Depot graph copied main graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_5:
-                        savedGraphs[9]=savedGraphs[4];
+                        mainGraph= depotGraphs[4];
                         console.getTextWindow().output("5. Depot graph copied main graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_6:
-                        savedGraphs[9]=savedGraphs[3];
+                        mainGraph= depotGraphs[3];
                         console.getTextWindow().output("6. Depot graph copied main graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_7:
-                        savedGraphs[9]=savedGraphs[2];
+                        mainGraph= depotGraphs[2];
                         console.getTextWindow().output("7. Depot graph copied main graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_8:
-                        savedGraphs[9]=savedGraphs[1];
+                        mainGraph= depotGraphs[1];
                         console.getTextWindow().output("8. Depot graph copied main graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_9:
-                        savedGraphs[9]=savedGraphs[0];
+                        mainGraph= depotGraphs[0];
                         console.getTextWindow().output("9. Depot graph copied main graph successfully. Press Esc for the main menu");
                         break;
 

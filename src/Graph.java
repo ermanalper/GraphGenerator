@@ -7,6 +7,8 @@ public class Graph {
     public static final int DRAWING_MODE_0 = 0;
     public static final int DRAWING_MODE_1 = 1;
     public static final int DRAWING_MODE_2 = 2;
+    public static final boolean MAIN_GRAPH = true;
+    public static final boolean SECONDARY_GRAPH = false;
 
 
 
@@ -329,12 +331,13 @@ public class Graph {
         }
 
     }
-    public void printNodeNames() {
+    public void printNodeNames(boolean whichGraph, int mainGraphNodeCount, int secondaryGraphNodeCount) {
+        /// when printing the main graph, mainGraphNodeCount and secondaryGraphNodeCount does not matter
         Console console = Main.console;
         for (int i = 0; i < 26; i++) {
             if (nodeArr[i] == null) continue;
             Node node = nodeArr[i];
-            Coordinate c = node.getRelativeCoordinate().calculateAbsoluteCoordinate(0,0, Coordinate.MAIN_GRAPH);
+            Coordinate c = node.getRelativeCoordinate().calculateAbsoluteCoordinate(whichGraph, mainGraphNodeCount, secondaryGraphNodeCount);
             console.getTextWindow().setCursorPosition(c.getX(), c.getY());
             console.getTextWindow().output(node.getName());
         }
