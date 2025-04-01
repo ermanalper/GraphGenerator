@@ -29,7 +29,7 @@ public class Node {
 
     public void connect(Node node) {
         this.connectedNodes.addNode(node);
-
+        node.connectedNodes.addNode(this);
     }
 
     public boolean isConnectedTo(Node node) {

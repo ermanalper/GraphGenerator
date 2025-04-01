@@ -35,6 +35,17 @@ public class Main {
     private static Graph[] bipartiteInfo;
 
 
+    private static int[][] mainGraphDefaultRelationMatrix; //relation matrix with the default node order, without including the isomorphic sequence
+                                                //e.g. relation matrix with the node order "A, B, C, D"
+                                                //if an isomorphic node order "B, D, A, C" is found, we will construct its relation matrix later,
+                                                //but if no isomorphic sequence is found, we will display the default one
+    private static Node[] mainGraphDisplayedIsomorphicSeq;
+
+
+
+
+
+
 
     private static void clearConsole() {
         for (int i = 0; i < row + 50; i++) {
@@ -138,6 +149,7 @@ public class Main {
 
     }
     private static void graphTestMenuSetup() {
+
         //print background
         for (int i = 0; i < 7; i++) {
             for (int j = 0; j < 10; j++) {
@@ -150,6 +162,7 @@ public class Main {
         //take the main graph,
         Graph graph = mainGraph;
 
+
         //print the relation matrix
         console.getTextWindow().setCursorPosition(40, 0);
         for (int i = 0; i < 26; i++) {
@@ -160,10 +173,13 @@ public class Main {
         }
         row = 1;
         int[][] relationMatrix = graph.buildRelationMatrix();
+
         for (int i = 0; i < 26; i++) {
             if (graph.getNode(i) == null) continue;
             console.getTextWindow().setCursorPosition(38, row++);
             console.getTextWindow().output(graph.getNode(i).getName() + " ");
+
+
             int[] row = relationMatrix[i];
             for (int j = 0; j < row.length; j++) {
                 console.getTextWindow().output(String.valueOf(row[j]));
@@ -202,6 +218,8 @@ public class Main {
 
         //R1 matrix
         relationMatrices[0] = graph.buildRelationMatrix();
+        mainGraphDefaultRelationMatrix = relationMatrices[0]; //we reference this to use later in the isomorphism screen if needed
+
         //Mark 1-step-away nodes as 1 in the min matrix
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
@@ -261,6 +279,84 @@ public class Main {
         console.getTextWindow().output("6. Copy a depot graph to main graph         (Keys: 123  456  789)");
     }
 
+    private static void printIsomorphicRelationMatrices() {
+        //first, create the relation matrix with the found isomorphic sequence
+        int[][] displayedMainGraphMatrix;
+        int mainGraphNodeCount = mainGraph.nodeCount();
+        char [] mainGraphNodeNames = new char[mainGraphNodeCount];
+        if (mainGraphDisplayedIsomorphicSeq != null) {
+            //if an isomorphic sequence is found, display the matrix accordingly
+
+            displayedMainGraphMatrix = new int[mainGraphNodeCount][mainGraphNodeCount];
+            /// this actually is the same thing with the private buildRelationMatrixWithNodeOrder() under the Graph class
+            for (int i = 0; i < mainGraphNodeCount; i++) {
+                Node initialNode = mainGraphDisplayedIsomorphicSeq[i];
+                mainGraphNodeNames[i] = initialNode.getName();
+                for (int j = 0; j < mainGraphNodeCount; j++) {
+                    Node terminalNode = mainGraphDisplayedIsomorphicSeq[j];
+                    if (initialNode.isConnectedTo(terminalNode)) {
+                        displayedMainGraphMatrix[i][j] = 1;
+                    }
+
+                }
+            }
+
+        } else {
+            displayedMainGraphMatrix = mainGraphDefaultRelationMatrix;
+            //if no isomorphism is found, display the default relation matrix for the secondary graph
+            int placeIx = 0;
+            for (int i = 0; i < 26; i++) {
+                if (mainGraph.getNode(i) != null) mainGraphNodeNames[placeIx++] = mainGraph.getNode(i).getName();
+            }
+        }
+
+        //print the main graph isomorphic relation matrix
+        for (int i = 0; i < mainGraphNodeCount; i++) {
+            console.getTextWindow().setCursorPosition(38,25 - mainGraphNodeCount + i);
+            console.getTextWindow().output(mainGraphNodeNames[i] + " ");
+            for(int j = 0; j < mainGraphNodeCount; j++) {
+                console.getTextWindow().output(String.valueOf(displayedMainGraphMatrix[i][j]));
+            }
+        }
+        console.getTextWindow().setCursorPosition(40, 24 - mainGraphNodeCount);
+        for (char c : mainGraphNodeNames) {
+            console.getTextWindow().output(String.valueOf(c));
+        }
+
+        //create the secondary graph's relation matrix
+        int[][] displayedSecGraphMatrix = secondaryGraph.buildRelationMatrix();
+        int secondaryGraphNodeCount = displayedSecGraphMatrix.length;
+
+        //take secondary graph's nodes' names and degrees to print them on the screen
+        char[] secondaryGraphNodeNames = new char[secondaryGraphNodeCount];
+        int[] secondaryGraphDegrees = new int[secondaryGraphNodeCount];
+        int placeIx = 0;
+        for (int i = 0; i < 26; i++) {
+            if (secondaryGraph.getNode(i) != null) {
+                secondaryGraphNodeNames[placeIx] = secondaryGraph.getNode(i).getName();
+                secondaryGraphDegrees[placeIx] = secondaryGraph.getNode(i).getDegree();
+                placeIx++;
+            }
+        }
+
+        //print secondary graph relation matrix
+        for (int i = 0; i < secondaryGraphNodeCount; i++) {
+            console.getTextWindow().setCursorPosition(44 + mainGraphNodeCount, 25 - secondaryGraphNodeCount + i);
+            console.getTextWindow().output(secondaryGraphNodeNames[i] + " ");
+            for (int j = 0; j < secondaryGraphNodeCount; j++) {
+                console.getTextWindow().output(String.valueOf(displayedSecGraphMatrix[i][j]));
+            }
+            console.getTextWindow().output(" " + secondaryGraphDegrees[i]);
+        }
+        console.getTextWindow().setCursorPosition(46 + mainGraphNodeCount, 24 - secondaryGraphNodeCount);
+        for (char c : secondaryGraphNodeNames) {
+            console.getTextWindow().output(String.valueOf(c));
+        }
+
+
+
+
+    }
 
 
     public static int[] randomlyCreateDegreeSequence(int min, int max, int n) {
@@ -526,6 +622,10 @@ public class Main {
                                 console.getTextWindow().output("Creating new graph is failed! Vertex count cannot be 0. Press Esc for the main menu");
                                 console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
 
+                            } else if (newGraphVertexCount > 12) {
+                                console.getTextWindow().output("Creating new graph is failed! Vertex count cannot be greater than 12. Press Esc for the main menu");
+                                //isomorphism issue (permutations) you cannot store 13! or more with int data type
+                                console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
                             } else {
                                 newGraphDegreeSequence = new int[newGraphVertexCount];
                                 console.getTextWindow().output("Enter new node degree (one node at a time): ");
@@ -590,6 +690,11 @@ public class Main {
                         if (input == 0) {
                             console.getTextWindow().setCursorPosition(0, row++);
                             console.getTextWindow().output("Vertex count cannot be zero. Please enter something positive: ");
+                        } else if (input > 12) {
+                            console.getTextWindow().setCursorPosition(0, row++);
+                            console.getTextWindow().output("Vertex count cannot be greater than 13. Try something less: ");
+                            //isomorphism issue (permutations) you cannot store 13! or more with int data type
+
                         } else {
                             newGraphVertexCount = input;
                             console.getTextWindow().setCursorPosition(0, row++);
@@ -747,6 +852,10 @@ public class Main {
                             console.getTextWindow().output("Error! You must choose a secondary graph from the \ngraph transfer menu.");
                             row++;
                         } else {
+                            for (int i = 25; i < row; i++) {
+                                console.getTextWindow().setCursorPosition(0, i);
+                                console.getTextWindow().output("                                                                                 ");
+                            }
                             console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
                             //clear the info field on the right side of the screen
                             int mainNodeCount = mainGraph.nodeCount();
@@ -758,21 +867,24 @@ public class Main {
                                 console.getTextWindow().setCursorPosition(37, i);
                                 console.getTextWindow().output("                                                                                                                        ");
                             }
-                            int n1 = mainGraph.nodeCount();
-                            n1 = ((n1 + 1) * (n1 + 4)) / 3;
-                            for (int i = 25; i < n1; i++) {
+
+                            //Delete the relation matrices on the right info field
+                            int relationMaticesTotalRowCount = mainNodeCount;
+                            relationMaticesTotalRowCount = ((relationMaticesTotalRowCount + 1) * (relationMaticesTotalRowCount + 4)) / 3;
+                            for (int i = 25; i < relationMaticesTotalRowCount; i++) {
                                 console.getTextWindow().setCursorPosition(0, i);
                                 console.getTextWindow().output("                                                                                                                                                                                                                                   ");
                             }
                             row = 25;
                             // the field is cleared above
-                            int n2 = secondaryGraph.nodeCount();
 
+
+                            int secondaryNodeCount = secondaryGraph.nodeCount();
                             //print background
                             for (int i = 0; i < 7; i++) {
                                 for (int j = 0; j < 10; j++) {
                                     int x = 4 * i;
-                                    int y = (4 * j) + (48 + n1 + n2);
+                                    int y = (4 * j) + (48 + mainNodeCount + secondaryNodeCount);
                                     console.getTextWindow().setCursorPosition(y, x);
                                     console.getTextWindow().output('.');
                                 }
@@ -780,9 +892,33 @@ public class Main {
                             Edge[] edges = secondaryGraph.getEdgeArray();
                             int[][] inkedPoints = new int[25][37];
                             for (Edge edge : edges) {
-                                edge.drawEdge(inkedPoints, drawingMode, Graph.SECONDARY_GRAPH, n1, n2);
+                                edge.drawEdge(inkedPoints, drawingMode, Graph.SECONDARY_GRAPH, mainNodeCount, secondaryNodeCount);
                             }
-                            secondaryGraph.printNodeNames(Graph.SECONDARY_GRAPH, n1, n2);
+                            secondaryGraph.printNodeNames(Graph.SECONDARY_GRAPH, mainNodeCount, secondaryNodeCount);
+
+                            /// search for isomorphism
+                            mainGraphDisplayedIsomorphicSeq = secondaryGraph.findIsomorphicSequenceTo(mainGraph);
+
+                            printIsomorphicRelationMatrices();
+
+                            String isomorphismSituation;
+                            if (mainGraphDisplayedIsomorphicSeq != null) {
+                                //Isomorphism is found
+                                isomorphismSituation = "Isomorphic";
+                            } else {
+                                //not isomorphic
+                                isomorphismSituation = "Non-Isomorphic";
+                            }
+                            int cursorX = 43 + ((mainNodeCount + secondaryNodeCount) / 2) - (isomorphismSituation.length() / 2);
+                            console.getTextWindow().setCursorPosition(cursorX, 26);
+                            console.getTextWindow().output(isomorphismSituation);
+
+
+
+
+
+
+
 
 
 
@@ -850,11 +986,11 @@ public class Main {
                 console.getTextWindow().setCursorPosition(0, 0);
                 switch (e.getKeyCode()) {
                     case KeyEvent.VK_G:
-                    secondaryGraph=mainGraph;
+                    secondaryGraph= new Graph(mainGraph, 'N');
                     console.getTextWindow().output("Main graph copied second graph successfully. Press Esc for the main menu");
                     break;
                     case KeyEvent.VK_H:
-                        mainGraph= secondaryGraph;
+                        mainGraph = new Graph(secondaryGraph, 'A');
                         console.getTextWindow().output("Second graph copied Main graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_L:

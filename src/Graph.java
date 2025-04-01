@@ -1,4 +1,3 @@
-import com.sun.java.swing.plaf.windows.WindowsInternalFrameTitlePane;
 import enigma.console.Console;
 
 import java.util.Random;
@@ -33,6 +32,7 @@ public class Graph {
     public Graph(Graph nodeArr) {
         //clones nodeArr and initializes a new one
         //this.nodeCount = nodeArr.nodeCount();
+        /// DOES NOT CLONE NODES, JUST REFERENCES THE EXISTING ONES
 
         Node[] newArray = new Node[26];
         for (int i = 0; i < 26; i++) {
@@ -56,6 +56,49 @@ public class Graph {
         }
         this.nodeArr = nodeArr;
         //this.nodeCount = degreeSequence.length;
+    }
+
+    /// the constructor below COMPLETELY clones the masterGraph
+    public Graph(Graph masterGraph, char initialNodeName) {
+
+        int[][] masterMatrix = masterGraph.buildRelationMatrix();
+        int nCount = masterMatrix.length;
+        Node[] newNodes = new Node[nCount];
+
+        //initialize all new nodes
+        int newNodeIx = 0;
+        for (int i = 0; i < 26; i++) {
+            if (masterGraph.getNode(i) == null) continue;
+            Node masterNode = masterGraph.getNode(i);
+            Node newNode = new Node((char)(initialNodeName + newNodeIx), masterNode.getDegree());
+            newNode.setRelativeCoordinate(masterNode.getRelativeCoordinate());
+            newNodes[newNodeIx++] = newNode;
+        }
+
+
+        // connect all nodes and construct new edges according to the relation matrix
+        Edge[] newEdges = new Edge[masterGraph.getEdgeArray().length];
+        int edgeIx = 0;
+        for (int i = 0; i < nCount; i++) {
+            Node initialNode = newNodes[i];
+            for (int j = i; j < nCount; j++) {
+                Node terminalNode = newNodes[j];
+                if (masterMatrix[i][j] == 1) {
+                    initialNode.connect(terminalNode);
+                    newEdges[edgeIx++] = new Edge(initialNode, terminalNode);
+                }
+            }
+        }
+
+        // change node array format to match the required format
+        Node[] oNodes = new Node[26];
+        for (int i = 0; i < newNodes.length; i++) {
+            Node node = newNodes[i];
+            oNodes[node.getName() - 'A'] = node;
+        }
+        this.nodeArr = oNodes;
+        this.edgeArr = newEdges;
+
     }
 
 
@@ -127,7 +170,7 @@ public class Graph {
         int edgeCount = degSum / 2;
         Edge[] o = new Edge[edgeCount];
         int edgeIx = 0;
-        //Takes nodes (not connected yet, Node.connectedNodes is empty) and connects them randomly (adds each other to Nodes.connectedNodes)
+        //Takes nodes (not connected yet, for each Node node, node.connectedNodes is empty) and connects them randomly (adds each other to Node.connectedNodes)
         Random random = new Random();
         for (int i = 0; i < 26; i++) {
             if (this.nodeArr[i] == null) continue;
@@ -148,7 +191,7 @@ public class Graph {
 
                 //if we had connected 2 nodes that must not be connected, reset the whole process and rerun the function
                 if(availableNodes.nodeCount() == 0) {
-                    //unconnect all nodes connected so far
+                    //disconnect all nodes connected so far
                     for (int n = 0; n < 26; n++) {
                         if (getNode(n) == null) continue;
                         getNode(n).connectedNodes = new Graph();
@@ -169,7 +212,6 @@ public class Graph {
                     Node targetNode = availableNodes.getNode(pointer);
 
                     currNode.connect(targetNode);
-                    targetNode.connect(currNode);
                     o[edgeIx++] = new Edge(currNode, targetNode);
                     availableNodes.removeNode(pointer);
                 }
@@ -290,18 +332,25 @@ public class Graph {
         //takes nodes, but with non-empty Nodes.connectedNodes, builds a relation matrix using this list
         // YOU MUST USE THIS AFTER CONNECTING THE NODES WITH DegreeOperation.randomlyConnectNodes(nodes);
         Graph graph = this;
+        int row = 0;
+        int col = 0;
         int n = graph.nodeCount();
         int[][] o = new int[n][n];
         for (int i = 0; i < 26; i++) {
             if (this.nodeArr[i] == null) continue;
+
             for (int j = 0; j < 26; j++) {
                 if (this.nodeArr[j] == null) continue;
 
                 if (graph.getNode(i).isConnectedTo(graph.getNode(j))) {
-                    o[i][j] = 1;
+                    o[row][col] = 1;
                     // o[j][i] = 1;
                 }
+                col++;
             }
+            row++;
+            col = 0;
+
         }
         return o;
     }
@@ -505,6 +554,160 @@ public class Graph {
         return null;
 
     }
+
+
+    /// functions below are all for finding isomorphism
+
+
+    private static int[][] buildRelationMatrixWithNodeOrder(Node[] nodes) {
+        /// this is a helper function used in findIsomorphicSequenceTo()
+        int n = nodes.length;
+        int[][] relation = new int[n][n];
+        for (int i = 0; i < n; i++) {
+            Node initialNode = nodes[i];
+            for (int j = 0; j < n; j++) {
+                Node terminalNode = nodes[j];
+                if (initialNode.isConnectedTo(terminalNode)) {
+                    relation[i][j] = 1;
+                }
+
+            }
+        }
+        return relation; //this should return a symmetric matrix for a simple graph
+    }
+
+    private boolean isIsomorphismCandidate(Graph secondaryGraph) {
+        //this is a helper function used in findIsomorphicSequenceTo()
+
+        /// for two graphs to be isomorphic, their node counts, edge counts and degree sequences must be the same.
+        /// this function checks if these specs match and return false if they do not, so we do not have to calculate permutations for
+        /// isomorphism and call it "Not Isomorphic" rapidly
+        if (this.nodeCount() != secondaryGraph.nodeCount() || this.getEdgeArray().length != secondaryGraph.getEdgeArray().length) {
+            return false;
+        }
+        int[] masterGraphDegrees = new int[this.nodeCount()];
+        int[] secondaryGraphDegrees = new int[secondaryGraph.nodeCount()]; //node counts should be the same
+        int masterPlaceIx = 0;
+        int secondaryPlaceIx = 0;
+
+        //record all nodes' degrees to decide quick on not being isomorphic if their degrees does not match
+        for (int i = 0; i < 26; i++) {
+            if (this.getNode(i) != null) {
+                masterGraphDegrees[masterPlaceIx++] = this.getNode(i).getDegree();
+            }
+            if (secondaryGraph.getNode(i) != null) {
+                secondaryGraphDegrees[secondaryPlaceIx++] = secondaryGraph.getNode(i).getDegree();
+            }
+        }
+        //compare all degrees
+        for (int i = 0; i < masterGraphDegrees.length; i++) {
+            int searchFor = masterGraphDegrees[i];
+            int searchIx = 0;
+            boolean flag = false;
+            do {
+                if(secondaryGraphDegrees[searchIx] == searchFor) {
+                    secondaryGraphDegrees[searchIx] = -1; //label as corresponded
+                    flag = true;
+                }
+                searchIx++;
+            }while(!flag && searchIx < secondaryGraphDegrees.length);
+            if (!flag) return false;
+        }
+        return true;
+    }
+
+    private static boolean isSameMatrix(int[][] m1, int[][] m2) {
+        if (m1.length != m2.length || m1[0].length != m2[0].length) return false;
+        for (int i = 0; i < m1.length; i++) {
+            for (int j = 0; j < m1[0].length; j++) {
+                if (m1[i][j] != m2[i][j]) return false;
+            }
+        }
+        return true;
+    }
+
+    private static int factorial(int num) {
+        int o = 1;
+        for (int i = 1; i <= num; i++) {
+            o *= i;
+        }
+        return o;
+    }
+
+    private static Node[] takeNthPermutation(Node[] nodeSeq, int n) {
+        int nodeCount = nodeSeq.length;
+        Node[] nThPermutation = new Node[nodeCount];
+
+        int[] ixHolder = new int[nodeCount]; //last ix of ixHolder is always 0
+        int remainder = n;
+        for (int i = 1; i < nodeCount; i++) {
+            int factorial = factorial(nodeCount - i);
+            ixHolder[i - 1] = (int) (remainder / factorial);
+            remainder -= factorial * ixHolder[i - 1];
+        }
+
+        //clone nodeSeq
+        Node[] clonedNodeSeq = new Node[nodeSeq.length];
+        for(int i = 0; i < nodeSeq.length; i++) {
+            clonedNodeSeq[i] = nodeSeq[i];
+        }
+
+        /// order the permutation according to the indices in the ixHolder array
+        for (int i = 0; i < nodeSeq.length; i++) {
+            nThPermutation[i] = clonedNodeSeq[ixHolder[i]];
+            //take the node out of the clonedNodeSeq
+            clonedNodeSeq[ixHolder[i]] = null;
+            Node[] nodeSeqContinue = new Node[clonedNodeSeq.length - 1];
+            int placeIx = 0;
+            for (int j = 0; j < clonedNodeSeq.length; j++) {
+                if (clonedNodeSeq[j] != null) {
+                    nodeSeqContinue[placeIx++] = clonedNodeSeq[j];
+                }
+            }
+            clonedNodeSeq = nodeSeqContinue;
+        }
+        return nThPermutation;
+
+
+
+    }
+
+    private static boolean isPossibleOrder(Node[] nodeArr1, Node[] nodeArr2) {
+        // they have the same length
+        for (int i = 0; i < nodeArr1.length; i++) {
+            if (nodeArr1[i].getDegree() != nodeArr2[i].getDegree()) return false;
+        }
+        return true;
+    }
+
+    public Node[] findIsomorphicSequenceTo(Graph candidateGraph) {
+        //returns null if not isomorphic
+        /// if isomorphic, returns an ordered node array, oNodeArr, with the nth node in the oNodeArr corresponding the nth node in this graph
+        //return an ordered node sequence of the candidateGraph's nodes
+        if (!this.isIsomorphismCandidate(candidateGraph)) return null;
+
+        int[][] masterMatrix = this.buildRelationMatrix();
+
+        Node[] nodes = new Node[candidateGraph.nodeCount()];
+        int placeIx = 0;
+        for (int i = 0; i < 26; i++) {
+            if(candidateGraph.getNode(i) != null) {
+                nodes[placeIx++] = candidateGraph.getNode(i);
+            }
+        }
+
+        int permutationCount = factorial(nodes.length);
+        for (int p = 0; p < permutationCount; p++) {
+            //find all permutations P(i), P(0) is the array itself
+            Node[] ordered = takeNthPermutation(nodes, p);
+            if (!isPossibleOrder(nodes, ordered)) continue; // if the degree sequences does not match, continue without even calculating the matrix
+            int[][] orderedMatrix = buildRelationMatrixWithNodeOrder(ordered);
+            if (isSameMatrix(masterMatrix, orderedMatrix)) return ordered; ///found
+        }
+        return null; /// no isomorphism is found
+
+    }
+
 
 
 
