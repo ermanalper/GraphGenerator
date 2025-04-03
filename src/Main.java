@@ -847,6 +847,9 @@ public class Main {
                             console.getTextWindow().output("Yes. Center: " + center.getName());
                         }
                         break;
+                    case KeyEvent.VK_9:
+                        console.getTextWindow().output(String.valueOf(mainGraph.isStarGraph()));
+                        break;
                     case KeyEvent.VK_0: ///isomorphism
                         if (secondaryGraph == null) {
                             console.getTextWindow().output("Error! You must choose a secondary graph from the \ngraph transfer menu.");

@@ -49,4 +49,7 @@ public class Node {
         return this.coordinate;
     }
 
+    public Graph getConnectedNodes() {
+        return connectedNodes;
+    }
 }

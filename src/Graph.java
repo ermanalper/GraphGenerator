@@ -517,6 +517,41 @@ public class Graph {
         return true;
     }
 
+    public boolean isStarGraph() {
+        if (!isConnected()) return false; // graph must be fully connected
+
+        Node centralNode = null;
+
+        // find the central node (connected to all others)
+        for (int i = 0; i < this.nodeCount(); i++) {
+            if (nodeArr[i] != null && nodeArr[i].getConnectedNodes().nodeCount() == this.nodeCount() - 1) {
+                centralNode = nodeArr[i];
+                break;
+            }
+        }
+
+        if (centralNode == null) return false; // no valid center found
+
+        // verify all other nodes are only connected to the central node
+        for (int i = 0; i < this.nodeCount(); i++) {
+            Node current = nodeArr[i];
+            if (current == null || current == centralNode) continue;
+
+            if (!current.isConnectedTo(centralNode)) return false;
+
+            for (int j = 0; j < this.nodeCount(); j++) {
+                Node other = nodeArr[j];
+                if (other == null || other == current || other == centralNode) continue;
+
+                if (current.isConnectedTo(other)) {
+                    return false; // non-central nodes should not be connected to each other
+                }
+            }
+        }
+
+        return true; // all checks passed, it's a star graph
+    }
+
     public Node wheelCenter() {
         //if wheel graph : returns the center node
         //if not : return null
