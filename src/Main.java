@@ -3,6 +3,7 @@ import enigma.core.Enigma;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.*;
 import java.util.Random;
 
 
@@ -997,10 +998,67 @@ public class Main {
                         console.getTextWindow().output("Second graph copied Main graph successfully. Press Esc for the main menu");
                         break;
                     case KeyEvent.VK_L:
-                     //nası yapacağımızı tam bilmiyorum
+                     //nası yapacağımızı tam bilmiyorummetin belgesinden oku
+                        try {
+                            BufferedReader bReader = new BufferedReader(new FileReader("Graph1.txt"));
+
+                            int nodeCount = Integer.parseInt(bReader.readLine().trim());
+                            Node[] nodeArrText = new Node[nodeCount];
+
+
+                            for (int i = 0; i < nodeCount; i++) {
+                                String[] parts = bReader.readLine().trim().split(" ");
+                                char name = parts[0].charAt(0);
+                                int x = Integer.parseInt(parts[1]);
+                                int y = Integer.parseInt(parts[2]);
+                                Coordinate cordinate= new Coordinate(x, y);
+
+                                //nodeArrText[i] = new Node(name); burada node derecesi de lazım onu en altta matrix okuyunca çıkarıyoruz
+                                nodeArrText[i].setRelativeCoordinate(cordinate);
+                            }
+
+
+
+                            bReader.close();
+
+
+
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+
                         break;
                     case KeyEvent.VK_S:
-                        //burayı da bilmiyorum
+
+                        File file = new File("Graph1.txt");
+
+                            try {file.createNewFile();
+
+
+                                FileWriter fWriter= new FileWriter(file,false);
+                                BufferedWriter bWriter= new BufferedWriter(fWriter);
+                                bWriter.write(mainGraph.nodeCount()+"\n");
+                                for(int i=0;i<mainGraph.nodeCount();i++) {
+
+                                    bWriter.write(mainGraph.nodeArr[i].getName());
+                                    bWriter.write(" "+mainGraph.nodeArr[i].coordinate.getX()+" "+mainGraph.nodeArr[i].coordinate.getY()+"\n");
+
+                                }
+                                int[][] relationMatrixForText = mainGraph.buildRelationMatrix();
+                                for (int[] row : relationMatrixForText) {
+                                    for (int j = 0; j < row.length; j++) {
+                                        bWriter.write(String.valueOf(row[j]));
+                                    }
+                                    bWriter.write("\n");
+                                }
+
+
+
+                                bWriter.close();
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            }
+
                         break;
                         /*
               savedgraph[9]=main
@@ -1098,7 +1156,7 @@ public class Main {
         console.getTextWindow().addKeyListener(escToMainMenuKeyListener);
         console.getTextWindow().addKeyListener(mainMenuKeyListener);
     }
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         /*
         int[] degrees = {2, 2, 2, 0, 1, 1};
         Graph graph = new Graph(degrees, 'A');

@@ -3,7 +3,7 @@
 public class Node {
     private final char name;
     private final int degree;
-    private Coordinate coordinate;
+    public Coordinate coordinate;
 
 
     //connectedNodes : if any node has an edge with this node, it will appear in connectedNodes

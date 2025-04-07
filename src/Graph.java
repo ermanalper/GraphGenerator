@@ -17,7 +17,7 @@ public class Graph {
 
 
 
-    private Node[] nodeArr;
+    public Node[] nodeArr;
     private Edge[] edgeArr;
     //private int nodeCount;
 
