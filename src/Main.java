@@ -33,7 +33,39 @@ public class Main {
     private static int minDegree;
     private static int maxDegree;
 
+    private static int bestPenaltyForMainGraph;
     private static Graph[] bipartiteInfo;
+
+    private static int[][] printMainGraph() {
+        int[][] inkedPoints = mainGraph.getInkMatrix();
+
+
+        char[] mode1Palette = {'+', 'o', '#', '@'};
+
+        for (int i = 0; i < inkedPoints.length; i++) {
+            for (int j = 0; j < inkedPoints[i].length; j++) {
+                if (inkedPoints[i][j] == 0) continue;
+
+                console.getTextWindow().setCursorPosition(j, i);
+                String ink;
+                switch(drawingMode) {
+                    case Graph.DRAWING_MODE_0:
+                        ink = String.valueOf(Math.min(9, inkedPoints[i][j]));
+                        break;
+                    case Graph.DRAWING_MODE_1:
+                        int inkIx = Math.min(3, inkedPoints[i][j]);
+                        ink = String.valueOf(mode1Palette[inkIx]);
+                        break;
+                    default: //Graph.DRAWING_MODE_2
+                        ink = "+";
+                        break;
+                }
+                console.getTextWindow().output(ink);
+            }
+        }
+        mainGraph.printNodeNames(Graph.MAIN_GRAPH, 0, 0);
+        return inkedPoints;
+    }
 
 
     private static int[][] mainGraphDefaultRelationMatrix; //relation matrix with the default node order, without including the isomorphic sequence
@@ -41,6 +73,8 @@ public class Main {
                                                 //if an isomorphic node order "B, D, A, C" is found, we will construct its relation matrix later,
                                                 //but if no isomorphic sequence is found, we will display the default one
     private static Node[] mainGraphDisplayedIsomorphicSeq;
+
+    private static int improvementTry;
 
 
 
@@ -187,7 +221,7 @@ public class Main {
             }
             console.getTextWindow().output(" " + String.valueOf(graph.getNode(i).getDegree()));
         }
-        row += 2;
+        row += 7;
         console.getTextWindow().setCursorPosition(38, row++);
         console.getTextWindow().output("Graph Test Menu: ");
         console.getTextWindow().setCursorPosition(38, row++);
@@ -212,6 +246,10 @@ public class Main {
         console.getTextWindow().output("9. Star Graph (Sn)?");
         console.getTextWindow().setCursorPosition(38, row++);
         console.getTextWindow().output("0. Isomorphic?");
+        console.getTextWindow().setCursorPosition(38, row++);
+        console.getTextWindow().output("H. Redraw Graph");
+        console.getTextWindow().setCursorPosition(38, row++);
+        console.getTextWindow().output("  (Improvement)");
 
         int n = graph.nodeCount();
         int[][] minMatrix = new int[n][n];
@@ -540,6 +578,8 @@ public class Main {
                             console.getTextWindow().setCursorPosition(0, 19);
                             console.getTextWindow().output("Error! You must create the main graph first.");
                         } else {
+
+                            improvementTry = 1;
                             console.getTextWindow().removeKeyListener(mainMenuKeyListener);
                             console.getTextWindow().removeKeyListener(graphTestMenuKeyListener);
                             console.getTextWindow().removeKeyListener(inputDegreeSequenceMethodKeyListener);
@@ -551,12 +591,21 @@ public class Main {
                             console.getTextWindow().addKeyListener(graphTestMenuKeyListener);
                             clearConsole();
                             graphTestMenuSetup();
+                            int initialPenalty = Graph.calculatePenalty(printMainGraph(), mainGraph);
+                            bestPenaltyForMainGraph = initialPenalty;
 
-                            int[][] inkedPoints = new int[25][37];
-                            for (Edge edge : mainGraph.getEdgeArray()) {
-                                edge.drawEdge(inkedPoints, drawingMode, Graph.MAIN_GRAPH, 0, 0);
-                            }
-                            mainGraph.printNodeNames(Graph.MAIN_GRAPH, 0, 0);
+                            row = mainGraph.nodeCount() + 2;
+                            console.getTextWindow().setCursorPosition(38, row++);
+                            console.getTextWindow().output("C pen: " + initialPenalty);
+                            console.getTextWindow().setCursorPosition(37, row++);
+                            console.getTextWindow().output("BC pen: " + initialPenalty);
+
+                            console.getTextWindow().setCursorPosition(38, mainGraph.nodeCount() + 6);
+                            console.getTextWindow().output("Draw: " + drawingMode);
+                            console.getTextWindow().setCursorPosition(38, mainGraph.nodeCount() + 5);
+                            console.getTextWindow().output("---Try: " + improvementTry);
+
+
                         }
 
                         break;
@@ -894,10 +943,35 @@ public class Main {
                                 }
                             }
                             Edge[] edges = secondaryGraph.getEdgeArray();
-                            int[][] inkedPoints = new int[25][37];
-                            for (Edge edge : edges) {
-                                edge.drawEdge(inkedPoints, drawingMode, Graph.SECONDARY_GRAPH, mainNodeCount, secondaryNodeCount);
+                            int[][] inkedPoints = secondaryGraph.getInkMatrix();
+
+                            char[] mode1Palette = {'+', 'o', '#', '@'};
+
+                            for (int i = 0; i < inkedPoints.length; i++) {
+                                for (int j = 0; j < inkedPoints[i].length; j++) {
+                                    if (inkedPoints[i][j] == 0) continue;
+
+                                    int printX = j+ 48 + mainNodeCount + secondaryNodeCount;//shift
+                                    console.getTextWindow().setCursorPosition(printX, i); //shift
+                                    String ink;
+                                    switch(drawingMode) {
+                                        case Graph.DRAWING_MODE_0:
+                                            ink = String.valueOf(Math.min(9, inkedPoints[i][j]));
+                                            break;
+                                        case Graph.DRAWING_MODE_1:
+                                            int inkIx = Math.min(3, inkedPoints[i][j]);
+                                            ink = String.valueOf(mode1Palette[inkIx]);
+                                            break;
+                                        default: //Graph.DRAWING_MODE_2
+                                            ink = "+";
+                                            break;
+                                    }
+                                    console.getTextWindow().output(ink);
+                                }
                             }
+
+
+
                             secondaryGraph.printNodeNames(Graph.SECONDARY_GRAPH, mainNodeCount, secondaryNodeCount);
 
                             /// search for isomorphism
@@ -916,23 +990,44 @@ public class Main {
                             int cursorX = 43 + ((mainNodeCount + secondaryNodeCount) / 2) - (isomorphismSituation.length() / 2);
                             console.getTextWindow().setCursorPosition(cursorX, 26);
                             console.getTextWindow().output(isomorphismSituation);
-
-
-
-
-
-
-
-
-
-
                         }
+                        break;
+                    case KeyEvent.VK_H: ///graph improvement
+                          for(int i = 0; i < 25; i++) {
+                              for (int j = 0; j < 37; j++) {
+                                  console.getTextWindow().setCursorPosition(j, i);
+                                  if (i % 4 == 0 && j % 4 == 0) {
+                                      console.getTextWindow().output(".");
+                                  } else {
+                                      console.getTextWindow().output(" ");
+                                  }
+                              }
+                          }
+
+                        mainGraph.randomlyPlaceNodes();
+                        int[][] inkedPoints= printMainGraph();
+                        int penalty = Graph.calculatePenalty(inkedPoints, mainGraph);
+
+
+                        console.getTextWindow().setCursorPosition(38, mainGraph.nodeCount() + 2);
+                        console.getTextWindow().output("                     ");
+                        console.getTextWindow().setCursorPosition(38, mainGraph.nodeCount() + 2);
+                        console.getTextWindow().output("C pen: " + penalty);
+                        console.getTextWindow().setCursorPosition(38, mainGraph.nodeCount() + 5);
+                        console.getTextWindow().output("---Try: " + ++improvementTry);
+                        if (penalty < bestPenaltyForMainGraph) {
+                            bestPenaltyForMainGraph = penalty;
+                            console.getTextWindow().setCursorPosition(37, mainGraph.nodeCount() + 3);
+                            console.getTextWindow().output("                  ");
+
+                            console.getTextWindow().setCursorPosition(37, mainGraph.nodeCount() + 3);
+                            console.getTextWindow().output("BC pen: " + penalty);
+                        }
+                        row--;
 
 
 
-
-
-
+                        break;
 
                 }
 

@@ -20,6 +20,7 @@ public class Node {
     }
 
 
+
     public char getName() {
         return this.name;
     }

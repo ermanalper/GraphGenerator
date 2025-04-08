@@ -19,14 +19,14 @@ public class Graph {
 
     public Node[] nodeArr;
     private Edge[] edgeArr;
-    //private int nodeCount;
+    private int count;
 
 
 
     public Graph() {
         //initializes an empty NodeArray
         this.nodeArr = new Node[26];
-        //nodeCount = 0;
+        this.count = 0;
     }
 
     public Graph(Graph nodeArr) {
@@ -41,6 +41,7 @@ public class Graph {
             newArray[nodeName - 'A'] = nodeArr.getNode(i);
         }
         this.nodeArr = newArray;
+        this.count = nodeArr.nodeCount();
 
     }
     public Graph(int[] degreeSequence, char firstNodeName) {
@@ -55,7 +56,7 @@ public class Graph {
             nodeArr[nodeName - 'A'] = new Node(nodeName, degreeSequence[i]);
         }
         this.nodeArr = nodeArr;
-        //this.nodeCount = degreeSequence.length;
+        this.count = degreeSequence.length;
     }
 
     /// the constructor below COMPLETELY clones the masterGraph
@@ -98,6 +99,7 @@ public class Graph {
         }
         this.nodeArr = oNodes;
         this.edgeArr = newEdges;
+        this.count = nCount;
 
     }
 
@@ -107,7 +109,7 @@ public class Graph {
     public void addNode(Node node) {
         if(this.nodeArr[node.getName() - 'A'] == null) {
             this.nodeArr[node.getName() - 'A'] = node;
-            //nodeCount++;
+            this.count++;
         }
 
     }
@@ -121,7 +123,7 @@ public class Graph {
     public void removeNode(char nodeName) {
         if (this.nodeArr[nodeName - 'A'] != null) {
             this.nodeArr[nodeName - 'A'] = null;
-            //nodeCount--;
+            this.count--;
         }
 
     }
@@ -144,12 +146,7 @@ public class Graph {
     }
 
     public int nodeCount() {
-        /// increasing and decreasing according to the add() - remove() functions caused some problems, hence this felt safer
-        int nodeCount = 0;
-        for (int i = 0; i < 26; i++) {
-            if (this.nodeArr[i] != null) nodeCount++;
-        }
-        return nodeCount;
+        return this.count;
     }
 
     public boolean containsNode(Node node) {
@@ -591,8 +588,67 @@ public class Graph {
     }
 
 
-    /// functions below are all for finding isomorphism
 
+    public int[][] getInkMatrix() {
+        //this might return different values in back-to-back calls due to the random selection of the starting and the ending node
+        Random random = new Random();
+        int nodeCount = this.nodeCount();
+        int[][] inkedPoints = new int[25][37];
+
+        for (int e = 0; e < this.edgeArr.length; e++) {
+            Edge edge = this.edgeArr[e];
+            //decide starting and ending points
+            int rand = random.nextInt(2) + 1; //returns either 1 or 2
+            Coordinate startingPoint = edge.getNodes()[rand / 2].getRelativeCoordinate().calculateAbsoluteCoordinate(MAIN_GRAPH, 0, 0);
+            Coordinate endingPoint = edge.getNodes()[rand % 2].getRelativeCoordinate().calculateAbsoluteCoordinate(MAIN_GRAPH, 0, 0);
+
+            int printX = startingPoint.getX();
+            int printY = startingPoint.getY();
+
+            while (Math.abs(printX - endingPoint.getX()) > 1 || Math.abs(printY - endingPoint.getY()) > 1) {
+
+                if (printX > endingPoint.getX()) { //if the cursor is on the left
+                    printX--;
+                } else if (printX < endingPoint.getX()) { //cursor is on the right
+                    printX++;
+                }
+                if (printY > endingPoint.getY()) { //if the cursor is below the ending point
+                    printY--;
+                } else if (printY < endingPoint.getY()) { //cursor is above
+                    printY++;
+                }
+                /// now we are pointing printY, printX on the inkedPoints matrix
+                inkedPoints[printY][printX]++;
+            }
+
+
+        }
+        return inkedPoints;
+    }
+
+    public static int calculatePenalty(int[][] inkMatrix, Graph graph) {
+        int penalty = 0;
+        for (int i = 0; i < 25; i++) {
+            for (int j = 0; j < 37; j++) {
+                if(inkMatrix[i][j] != 0)
+                    penalty += inkMatrix[i][j] - 1;
+            }
+        }
+
+        for (int n = 0; n < 26; n++) {
+            Node node = graph.getNode(n);
+            if (node == null) continue;
+            int j = node.getRelativeCoordinate().getX() * 4;
+            int i = node.getRelativeCoordinate().getY() * 4;
+            if (inkMatrix[i][j] != 0)
+                penalty += 1000 * (inkMatrix[i][j]);
+        }
+        return penalty;
+    }
+
+
+
+    /// functions below are all for finding isomorphism
 
     private static int[][] buildRelationMatrixWithNodeOrder(Node[] nodes) {
         /// this is a helper function used in findIsomorphicSequenceTo()
