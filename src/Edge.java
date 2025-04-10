@@ -1,6 +1,4 @@
-import enigma.console.Console;
 
-import java.util.Random;
 
 public class Edge {
     private final Node node1;

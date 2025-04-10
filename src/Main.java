@@ -1,5 +1,7 @@
 import enigma.console.Console;
+import enigma.console.TextAttributes;
 import enigma.core.Enigma;
+
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -38,7 +40,7 @@ public class Main {
 
     private static int[][] printMainGraph() {
         int[][] inkedPoints = mainGraph.getInkMatrix();
-
+        TextAttributes color;
 
         char[] mode1Palette = {'+', 'o', '#', '@'};
 
@@ -60,9 +62,20 @@ public class Main {
                         ink = "+";
                         break;
                 }
-                console.getTextWindow().output(ink);
+                if (inkedPoints[i][j] == 1) {
+                    color = new TextAttributes(java.awt.Color.green);
+                } else if (inkedPoints[i][j] == 2) {
+                    color = new TextAttributes(java.awt.Color.yellow);
+                } else if (inkedPoints[i][j] == 3) {
+                    color = new TextAttributes(java.awt.Color.magenta);
+                } else {
+                    color = new TextAttributes(java.awt.Color.red);
+                }
+
+                console.getTextWindow().output(ink, color);
             }
         }
+
         mainGraph.printNodeNames(Graph.MAIN_GRAPH, 0, 0);
         return inkedPoints;
     }
@@ -897,8 +910,16 @@ public class Main {
                             console.getTextWindow().output("Yes. Center: " + center.getName());
                         }
                         break;
-                    case KeyEvent.VK_9:
-                        console.getTextWindow().output(String.valueOf(mainGraph.isStarGraph()));
+                    case KeyEvent.VK_9: ///star graph
+                        Node centerNode = mainGraph.isStarGraph();
+                        String oStr;
+                        if (centerNode == null) {
+                            oStr = "No";
+                        } else {
+                            oStr = "Yes. Center node: " + centerNode.getName();
+                        }
+                        console.getTextWindow().output(oStr);
+
                         break;
                     case KeyEvent.VK_0: ///isomorphism
                         if (secondaryGraph == null) {
@@ -1084,45 +1105,87 @@ public class Main {
                 clearConsole();
                 console.getTextWindow().setCursorPosition(0, 0);
                 switch (e.getKeyCode()) {
+
                     case KeyEvent.VK_G:
                     secondaryGraph= new Graph(mainGraph, 'N');
                     console.getTextWindow().output("Main graph copied second graph successfully. Press Esc for the main menu");
                     break;
+
                     case KeyEvent.VK_H:
                         mainGraph = new Graph(secondaryGraph, 'A');
                         console.getTextWindow().output("Second graph copied Main graph successfully. Press Esc for the main menu");
                         break;
-                    case KeyEvent.VK_L:
-                     //nası yapacağımızı tam bilmiyorummetin belgesinden oku
-                        try {
-                            BufferedReader bReader = new BufferedReader(new FileReader("Graph1.txt"));
 
-                            int nodeCount = Integer.parseInt(bReader.readLine().trim());
-                            Node[] nodeArrText = new Node[nodeCount];
+                    case KeyEvent.VK_L:
+                        //nası yapacağımızı tam bilmiyorummetin belgesinden oku
+                        try {
+
+                            BufferedReader bReader = new BufferedReader(new FileReader("Graph1.txt"));
+                            String nodesInfo = bReader.readLine();
+
+                            int nodeCount = Integer.parseInt(nodesInfo.trim());
+                            Coordinate[] coordinates = new Coordinate[nodeCount];
+                            char[] nodeNames = new char[nodeCount];
+                            int[] nodesDegrees = new int[nodeCount];
 
 
                             for (int i = 0; i < nodeCount; i++) {
                                 String[] parts = bReader.readLine().trim().split(" ");
-                                char name = parts[0].charAt(0);
-                                int x = Integer.parseInt(parts[1]);
-                                int y = Integer.parseInt(parts[2]);
-                                Coordinate cordinate= new Coordinate(x, y);
-
-                                //nodeArrText[i] = new Node(name); burada node derecesi de lazım onu en altta matrix okuyunca çıkarıyoruz
-                                nodeArrText[i].setRelativeCoordinate(cordinate);
+                                nodeNames[i] = parts[0].charAt(0);
+                                coordinates[i] = new Coordinate(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
                             }
 
+                            int[][] readFromTextRelationMatrix = new int[nodeCount][nodeCount];
+                            int totalDegrees = 0;
 
+                            for (int i = 0; i < nodeCount; i++) {
+                                String strLineCheck = bReader.readLine();
+                                int nodeDegree = 0;
+                                for (int j = 0; j < nodeCount; j++) {
+
+                                    if(strLineCheck!=null) {
+                                        String strLine = strLineCheck.trim();
+                                        readFromTextRelationMatrix[i][j] = Character.getNumericValue(strLine.charAt(j));
+                                        nodeDegree += readFromTextRelationMatrix[i][j];
+                                    }
+
+                                }
+                                nodesDegrees[i] = nodeDegree;
+                                totalDegrees += nodeDegree;
+                            }
+                            Node[] readFromTextNodeArray = new Node[nodeCount];
+                            for (int i = 0; i < nodeCount; i++) {
+                                readFromTextNodeArray[i] = new Node(nodeNames[i], nodesDegrees[i]);
+                            }
+                            Graph readFromTextGraph = new Graph();
+
+                            Edge[] edges = new Edge[totalDegrees / 2];
+
+                            int edgeIx = 0;
+                            for (int i = 0; i < nodeCount; i++) {
+                                Node initialNode = readFromTextNodeArray[i];
+                                for (int j = i + 1; j < nodeCount; j++) {
+                                    if (readFromTextRelationMatrix[i][j] == 1) {
+                                        Node targetNode = readFromTextNodeArray[j];
+                                        initialNode.connect(targetNode);
+                                        edges[edgeIx++] = new Edge(initialNode, targetNode);
+                                    }
+                                }
+                                initialNode.setRelativeCoordinate(coordinates[i]);
+                                readFromTextGraph.addNode(initialNode);
+                            }
+                            readFromTextGraph.setEdgeArray(edges);
+                            mainGraph = readFromTextGraph;
 
                             bReader.close();
 
 
-
-                        } catch (IOException ex) {
+                        } catch (Exception ex) {
                             throw new RuntimeException(ex);
                         }
-
+                        console.getTextWindow().output("Graph copied from text successfully. Press Esc for the main menu");
                         break;
+
                     case KeyEvent.VK_S:
 
                         File file = new File("Graph1.txt");
@@ -1153,7 +1216,7 @@ public class Main {
                             } catch (IOException ex) {
                                 throw new RuntimeException(ex);
                             }
-
+                        console.getTextWindow().output("Graph saved to text successfully. Press Esc for the main menu");
                         break;
                         /*
               savedgraph[9]=main
